@@ -45,10 +45,17 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 - [x] **Milestone 14 (v1.1.0):** Floor Events (Lightweight)
   - Every 25 floors, a timed choice appears: +mana/sec (10 floors) vs +sigil charge rate (10 floors) vs -cooldowns (10 floors)
   - If you don’t choose within 2 minutes, the event vanishes with no bonus (prevents idle lock-ups)
+- [x] **Milestone 15 (v1.2.0):** Named Ritual Combos & Effects
+  - Each 3-spell ritual now has a unique generated name based on element composition
+  - Rituals grant passive bonuses: Pure (3 same element) = +18%, Hybrid (2+1) = +12%, Triad (1/1/1) = +8% each
+  - 🔥 Fire rituals boost spell damage, ❄️ Ice reduces cooldowns, ⚡ Thunder reduces mana cost, ✨ Arcane boosts sigil charge
+  - Including Spell Echo in a ritual adds a +5% kicker to all effects
+  - Special "signature" combos have flavor names (Elemental Trinity, Apocalypse, Resonant Fire, etc.)
+  - Live preview of ritual name and effects when selecting spells
 
 ### Future Roadmap
 
-- [ ] **(Maybe) - Ritual Depth: Tiers & Evolution**
+- [ ] **(Maybe) - Ritual Mastery & Evolution**
   - Casting the same ritual combo repeatedly "masters" it
   - Mastered rituals grant minor permanent effects or reduced cooldowns
   - Adds long-term goals without new UI complexity
