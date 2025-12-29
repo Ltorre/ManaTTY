@@ -16,7 +16,7 @@ var (
 	ErrInvalidSpellCount = errors.New("ritual requires exactly 3 spells")
 )
 
-// CreateRitual creates a new ritual from 3 spells.
+// CreateRitual creates a new ritual from 3 spells with v1.2.0 combo effects.
 func (e *GameEngine) CreateRitual(gs *models.GameState, spellIDs []string) (*models.Ritual, error) {
 	// Validate spell count
 	if len(spellIDs) != game.SpellsPerRitual {
@@ -44,8 +44,19 @@ func (e *GameEngine) CreateRitual(gs *models.GameState, spellIDs []string) (*mod
 		}
 	}
 
-	// Create the ritual
-	ritual := models.NewRitual(spellIDs)
+	// Compute ritual combo effects (v1.2.0)
+	comboInfo := game.ComputeRitualCombo(spellIDs)
+
+	// Create the ritual with effects
+	ritual := models.NewRitualWithEffects(
+		spellIDs,
+		comboInfo.Name,
+		comboInfo.Composition,
+		comboInfo.DominantElement,
+		comboInfo.Effects,
+		comboInfo.HasSpellEcho,
+		comboInfo.SignatureName,
+	)
 	gs.Rituals = append(gs.Rituals, ritual)
 	gs.ActiveRitualCount = len(gs.GetActiveRituals())
 
@@ -150,4 +161,52 @@ func (e *GameEngine) GetSpellsAvailableForRitual(gs *models.GameState, excludeID
 	}
 
 	return available
+}
+
+// v1.2.0: Ritual Combo Effect Aggregation
+
+// getRitualEffects returns ritual effects, computing dynamically for legacy rituals.
+func getRitualEffects(ritual *models.Ritual) []models.RitualEffect {
+	// If effects are already computed, use them
+	if len(ritual.Effects) > 0 {
+		return ritual.Effects
+	}
+	// For legacy rituals, compute dynamically
+	comboInfo := game.ComputeRitualCombo(ritual.SpellIDs)
+	return comboInfo.Effects
+}
+
+// getTotalRitualEffectBonus aggregates a specific effect type across all active rituals.
+func (e *GameEngine) getTotalRitualEffectBonus(gs *models.GameState, effectType models.RitualEffectType) float64 {
+	total := 0.0
+	for _, ritual := range gs.Rituals {
+		if ritual.IsActive {
+			for _, effect := range getRitualEffects(ritual) {
+				if effect.Type == effectType {
+					total += effect.Magnitude
+				}
+			}
+		}
+	}
+	return total
+}
+
+// GetTotalRitualDamageBonus returns combined damage bonus from all active rituals.
+func (e *GameEngine) GetTotalRitualDamageBonus(gs *models.GameState) float64 {
+	return e.getTotalRitualEffectBonus(gs, models.RitualEffectDamage)
+}
+
+// GetTotalRitualCooldownReduction returns combined cooldown reduction from all active rituals.
+func (e *GameEngine) GetTotalRitualCooldownReduction(gs *models.GameState) float64 {
+	return e.getTotalRitualEffectBonus(gs, models.RitualEffectCooldown)
+}
+
+// GetTotalRitualManaCostReduction returns combined mana cost reduction from all active rituals.
+func (e *GameEngine) GetTotalRitualManaCostReduction(gs *models.GameState) float64 {
+	return e.getTotalRitualEffectBonus(gs, models.RitualEffectManaCost)
+}
+
+// GetTotalRitualSigilChargeBonus returns combined sigil charge bonus from all active rituals.
+func (e *GameEngine) GetTotalRitualSigilChargeBonus(gs *models.GameState) float64 {
+	return e.getTotalRitualEffectBonus(gs, models.RitualEffectSigilRate)
 }
