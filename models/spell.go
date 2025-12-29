@@ -103,3 +103,43 @@ func (s *Spell) UpdateCooldown(elapsedMs int64) {
 		}
 	}
 }
+
+// GetEffectiveCooldown returns the cooldown after level bonuses (in ms).
+func (s *Spell) GetEffectiveCooldown(cooldownPerLevel float64) int64 {
+	// Each level reduces cooldown by cooldownPerLevel %
+	reduction := cooldownPerLevel * float64(s.Level-1)
+	cooldown := float64(s.BaseCooldownMs) * (1.0 - reduction)
+	if cooldown < 1000 {
+		cooldown = 1000 // Minimum 1 second
+	}
+	return int64(cooldown)
+}
+
+// GetEffectiveManaCost returns the mana cost after level bonuses.
+func (s *Spell) GetEffectiveManaCost(manaCostPerLevel float64) float64 {
+	// Each level reduces mana cost by manaCostPerLevel %
+	reduction := manaCostPerLevel * float64(s.Level-1)
+	cost := s.BaseManaRequirement * (1.0 - reduction)
+	if cost < 1 {
+		cost = 1 // Minimum 1 mana
+	}
+	return cost
+}
+
+// GetEffectiveDamage returns the damage after level bonuses.
+func (s *Spell) GetEffectiveDamage(damagePerLevel float64) float64 {
+	// Each level increases damage by damagePerLevel %
+	bonus := damagePerLevel * float64(s.Level-1)
+	return s.BaseDamage * (1.0 + bonus)
+}
+
+// CanLevelUp returns true if the spell can be upgraded.
+func (s *Spell) CanLevelUp(maxLevel int) bool {
+	return s.Level < maxLevel
+}
+
+// LevelUp increases the spell level by 1.
+func (s *Spell) LevelUp() bool {
+	s.Level++
+	return true
+}

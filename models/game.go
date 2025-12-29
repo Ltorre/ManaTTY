@@ -39,6 +39,14 @@ type SessionData struct {
 	LastSavedAt     time.Time `bson:"last_saved_at" json:"last_saved_at"`
 	AutoCastEnabled bool      `bson:"auto_cast_enabled" json:"auto_cast_enabled"`
 	AutoCastSlots   []string  `bson:"auto_cast_slots" json:"auto_cast_slots"` // Spell IDs in auto-cast slots
+
+	// Element synergy tracking
+	LastCastElements   []Element `bson:"last_cast_elements" json:"last_cast_elements"`     // Recent cast elements (up to 3)
+	ActiveSynergy      Element   `bson:"active_synergy" json:"active_synergy"`             // Currently active synergy element
+	SynergyExpiresAtMs int64     `bson:"synergy_expires_at_ms" json:"synergy_expires_at_ms"` // When synergy expires
+
+	// Aggregated notifications
+	AutoCastSkipCount int `bson:"-" json:"-"` // Transient: skipped auto-casts this second
 }
 
 // NewGameState creates a new game state with defaults.
@@ -74,12 +82,16 @@ func NewPassiveBonuses() *PassiveBonuses {
 func NewSessionData() *SessionData {
 	now := time.Now()
 	return &SessionData{
-		SessionStartMs:  now.UnixMilli(),
-		SessionDuration: 0,
-		LastTickMs:      now.UnixMilli(),
-		LastSavedAt:     now,
-		AutoCastEnabled: true,
-		AutoCastSlots:   []string{}, // Start with empty slots
+		SessionStartMs:     now.UnixMilli(),
+		SessionDuration:    0,
+		LastTickMs:         now.UnixMilli(),
+		LastSavedAt:        now,
+		AutoCastEnabled:    true,
+		AutoCastSlots:      []string{}, // Start with empty slots
+		LastCastElements:   []Element{},
+		ActiveSynergy:      "",
+		SynergyExpiresAtMs: 0,
+		AutoCastSkipCount:  0,
 	}
 }
 
@@ -200,6 +212,86 @@ func (gs *GameState) ToggleSpellAutoCast(spellID string) AutoCastToggleResult {
 		return AutoCastAdded
 	}
 	return AutoCastSlotsFull
+}
+
+// MoveAutoCastSlot moves a spell in the auto-cast slots (for priority ordering).
+// direction: -1 = move up (higher priority), +1 = move down (lower priority)
+func (gs *GameState) MoveAutoCastSlot(spellID string, direction int) bool {
+	slots := gs.Session.AutoCastSlots
+	for i, id := range slots {
+		if id == spellID {
+			newIndex := i + direction
+			if newIndex < 0 || newIndex >= len(slots) {
+				return false // Can't move further
+			}
+			// Swap
+			slots[i], slots[newIndex] = slots[newIndex], slots[i]
+			return true
+		}
+	}
+	return false
+}
+
+// RecordSpellCast records a spell cast for element synergy tracking.
+func (gs *GameState) RecordSpellCast(element Element) {
+	gs.Session.LastCastElements = append(gs.Session.LastCastElements, element)
+	// Keep only last 3
+	if len(gs.Session.LastCastElements) > 3 {
+		gs.Session.LastCastElements = gs.Session.LastCastElements[1:]
+	}
+}
+
+// CheckElementSynergy checks if a synergy should activate.
+// Returns the element if synergy triggered, empty string otherwise.
+func (gs *GameState) CheckElementSynergy() Element {
+	elements := gs.Session.LastCastElements
+	if len(elements) < 3 {
+		return ""
+	}
+	// Check if last 3 are same element
+	last := elements[len(elements)-1]
+	for _, e := range elements[len(elements)-3:] {
+		if e != last {
+			return ""
+		}
+	}
+	return last
+}
+
+// ActivateSynergy activates an element synergy buff.
+func (gs *GameState) ActivateSynergy(element Element, durationMs int64) {
+	gs.Session.ActiveSynergy = element
+	gs.Session.SynergyExpiresAtMs = time.Now().UnixMilli() + durationMs
+	// Clear streak so it must be rebuilt
+	gs.Session.LastCastElements = []Element{}
+}
+
+// HasActiveSynergy returns true if a synergy buff is currently active.
+func (gs *GameState) HasActiveSynergy() bool {
+	if gs.Session.ActiveSynergy == "" {
+		return false
+	}
+	return time.Now().UnixMilli() < gs.Session.SynergyExpiresAtMs
+}
+
+// GetActiveSynergy returns the active synergy element, or empty if none.
+func (gs *GameState) GetActiveSynergy() Element {
+	if gs.HasActiveSynergy() {
+		return gs.Session.ActiveSynergy
+	}
+	return ""
+}
+
+// GetSynergyTimeRemaining returns milliseconds remaining on synergy buff.
+func (gs *GameState) GetSynergyTimeRemaining() int64 {
+	if !gs.HasActiveSynergy() {
+		return 0
+	}
+	remaining := gs.Session.SynergyExpiresAtMs - time.Now().UnixMilli()
+	if remaining < 0 {
+		return 0
+	}
+	return remaining
 }
 
 // ResetForPrestige resets appropriate data for prestige.
