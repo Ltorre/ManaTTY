@@ -14,6 +14,8 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 
 ### Milestones
 
+
+#### v1.0.0 — Core Game
 - [x] **Milestone 1:** Project initialization & structure
 - [x] **Milestone 2:** Core data models
 - [x] **Milestone 3:** Game constants & formulas
@@ -39,19 +41,32 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
   - Tier 2 specializations at level 10: Burst Damage (+30% dmg) or Rapid Cast (-25% CD)
   - Auto-cast conditional rules: Always, Mana>50%, Mana>75%, Sigil not full, Synergy active
   - Press `X` to specialize, `C` to cycle conditions
-- [x] **Milestone 13 (v1.1.0):** Elemental Resonance Loadout Bonus
+
+#### v1.1.0 — Events & Loadout Bonuses
+- [x] **Milestone 13:** Elemental Resonance Loadout Bonus
   - 2+ spells of the same element in auto-cast grants a passive perk while equipped
   - Encourages themed loadouts and element-focused buildcrafting
-- [x] **Milestone 14 (v1.1.0):** Floor Events (Lightweight)
+- [x] **Milestone 14:** Floor Events (Lightweight)
   - Every 25 floors, a timed choice appears: +mana/sec (10 floors) vs +sigil charge rate (10 floors) vs -cooldowns (10 floors)
-  - If you don’t choose within 2 minutes, the event vanishes with no bonus (prevents idle lock-ups)
-- [x] **Milestone 15 (v1.2.0):** Named Ritual Combos & Effects
+  - If you don't choose within 2 minutes, the event vanishes with no bonus (prevents idle lock-ups)
+
+#### v1.2.0 — Named Rituals
+- [x] **Milestone 15:** Named Ritual Combos & Effects
   - Each 3-spell ritual now has a unique generated name based on element composition
   - Rituals grant passive bonuses: Pure (3 same element) = +18%, Hybrid (2+1) = +12%, Triad (1/1/1) = +8% each
   - 🔥 Fire rituals boost spell damage, ❄️ Ice reduces cooldowns, ⚡ Thunder reduces mana cost, ✨ Arcane boosts sigil charge
   - Including Spell Echo in a ritual adds a +5% kicker to all effects
   - Special "signature" combos have flavor names (Elemental Trinity, Apocalypse, Resonant Fire, etc.)
   - Live preview of ritual name and effects when selecting spells
+
+#### v1.3.0 — Standalone & Cross-Platform
+- [x] **Milestone 16:** Local JSON Storage & Windows Support
+  - No database required! Game works out-of-the-box with local JSON saves
+  - Saves stored in `~/.manatty/` (cross-platform)
+  - Automatic fallback: tries MongoDB first, uses local storage if unavailable
+  - Smart emoji detection: full emojis in Windows Terminal, ASCII fallback for legacy CMD
+  - Pre-built binaries for Windows, macOS, Linux, FreeBSD (x64, ARM, 32-bit)
+  - Path traversal protection with UUID validation
 
 ### Future Roadmap
 
@@ -77,7 +92,7 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 - **Language:** Go 1.21+
 - **TUI Framework:** [Bubble Tea](https://github.com/charmbracelet/bubbletea)
 - **Styling:** [Lipgloss](https://github.com/charmbracelet/lipgloss)
-- **Database:** MongoDB (Atlas Cloud or local)
+- **Storage:** Local JSON files (default) or MongoDB (optional)
 
 ## 📁 Project Structure
 
@@ -97,12 +112,22 @@ mage-tower-ascension/
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Option 1: Download Pre-built Binary (Easiest)
 
+Download the latest release for your platform from the `binaries/` folder:
+- **Windows:** `manatty-windows-amd64.exe` (64-bit) or `manatty-windows-386.exe` (32-bit)
+- **macOS:** `manatty-macos-arm64` (Apple Silicon) or `manatty-macos-amd64` (Intel)
+- **Linux:** `manatty-linux-amd64`, `manatty-linux-arm64`, etc.
+
+Just run it! No setup required - saves are stored locally in `~/.manatty/`.
+
+### Option 2: Build from Source
+
+#### Prerequisites
 - Go 1.21 or later
-- MongoDB instance (local or Atlas)
+- (Optional) MongoDB instance for cloud saves
 
-### Installation
+#### Installation
 
 ```bash
 # Clone the repository
@@ -112,17 +137,19 @@ cd ManaTTY
 # Install dependencies
 go mod download
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your MongoDB URI
-
-# Run the game
+# Run the game (no config needed!)
 go run main.go
+
+# Or build a binary
+go build -o manatty .
+./manatty
 ```
 
-## ⚙️ Configuration
+## ⚙️ Configuration (Optional)
 
-Create a `.env` file in the project root:
+The game works without any configuration! By default, it saves locally to `~/.manatty/`.
+
+To use MongoDB instead, create a `.env` file in the project root:
 
 ```env
 MONGODB_URI=mongodb://localhost:27017/mage_tower
@@ -131,6 +158,13 @@ GAME_TICK_RATE=10
 AUTO_SAVE_INTERVAL=30
 DEBUG=false
 ```
+
+**Default values** (used when no `.env` exists):
+- `LOG_LEVEL=info`
+- `GAME_TICK_RATE=10`
+- `AUTO_SAVE_INTERVAL=30`
+- `DEBUG=false`
+- Storage: Local JSON files
 
 ## 🎯 Core Mechanics
 
