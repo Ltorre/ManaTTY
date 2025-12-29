@@ -176,62 +176,37 @@ func getRitualEffects(ritual *models.Ritual) []models.RitualEffect {
 	return comboInfo.Effects
 }
 
-// GetTotalRitualDamageBonus returns combined damage bonus from all active rituals.
-func (e *GameEngine) GetTotalRitualDamageBonus(gs *models.GameState) float64 {
+// getTotalRitualEffectBonus aggregates a specific effect type across all active rituals.
+func (e *GameEngine) getTotalRitualEffectBonus(gs *models.GameState, effectType models.RitualEffectType) float64 {
 	total := 0.0
 	for _, ritual := range gs.Rituals {
 		if ritual.IsActive {
 			for _, effect := range getRitualEffects(ritual) {
-				if effect.Type == models.RitualEffectDamage {
+				if effect.Type == effectType {
 					total += effect.Magnitude
 				}
 			}
 		}
 	}
 	return total
+}
+
+// GetTotalRitualDamageBonus returns combined damage bonus from all active rituals.
+func (e *GameEngine) GetTotalRitualDamageBonus(gs *models.GameState) float64 {
+	return e.getTotalRitualEffectBonus(gs, models.RitualEffectDamage)
 }
 
 // GetTotalRitualCooldownReduction returns combined cooldown reduction from all active rituals.
 func (e *GameEngine) GetTotalRitualCooldownReduction(gs *models.GameState) float64 {
-	total := 0.0
-	for _, ritual := range gs.Rituals {
-		if ritual.IsActive {
-			for _, effect := range getRitualEffects(ritual) {
-				if effect.Type == models.RitualEffectCooldown {
-					total += effect.Magnitude
-				}
-			}
-		}
-	}
-	return total
+	return e.getTotalRitualEffectBonus(gs, models.RitualEffectCooldown)
 }
 
 // GetTotalRitualManaCostReduction returns combined mana cost reduction from all active rituals.
 func (e *GameEngine) GetTotalRitualManaCostReduction(gs *models.GameState) float64 {
-	total := 0.0
-	for _, ritual := range gs.Rituals {
-		if ritual.IsActive {
-			for _, effect := range getRitualEffects(ritual) {
-				if effect.Type == models.RitualEffectManaCost {
-					total += effect.Magnitude
-				}
-			}
-		}
-	}
-	return total
+	return e.getTotalRitualEffectBonus(gs, models.RitualEffectManaCost)
 }
 
 // GetTotalRitualSigilChargeBonus returns combined sigil charge bonus from all active rituals.
 func (e *GameEngine) GetTotalRitualSigilChargeBonus(gs *models.GameState) float64 {
-	total := 0.0
-	for _, ritual := range gs.Rituals {
-		if ritual.IsActive {
-			for _, effect := range getRitualEffects(ritual) {
-				if effect.Type == models.RitualEffectSigilRate {
-					total += effect.Magnitude
-				}
-			}
-		}
-	}
-	return total
+	return e.getTotalRitualEffectBonus(gs, models.RitualEffectSigilRate)
 }

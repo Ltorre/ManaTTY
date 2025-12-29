@@ -122,38 +122,6 @@ func (r *Ritual) GetEffectByType(effectType RitualEffectType) (RitualEffect, boo
 	return RitualEffect{}, false
 }
 
-// GetTotalDamageBonus returns the total damage bonus from this ritual.
-func (r *Ritual) GetTotalDamageBonus() float64 {
-	if effect, ok := r.GetEffectByType(RitualEffectDamage); ok {
-		return effect.Magnitude
-	}
-	return 0
-}
-
-// GetTotalCooldownReduction returns the total cooldown reduction from this ritual.
-func (r *Ritual) GetTotalCooldownReduction() float64 {
-	if effect, ok := r.GetEffectByType(RitualEffectCooldown); ok {
-		return effect.Magnitude
-	}
-	return 0
-}
-
-// GetTotalManaCostReduction returns the total mana cost reduction from this ritual.
-func (r *Ritual) GetTotalManaCostReduction() float64 {
-	if effect, ok := r.GetEffectByType(RitualEffectManaCost); ok {
-		return effect.Magnitude
-	}
-	return 0
-}
-
-// GetTotalSigilChargeBonus returns the total sigil charge bonus from this ritual.
-func (r *Ritual) GetTotalSigilChargeBonus() float64 {
-	if effect, ok := r.GetEffectByType(RitualEffectSigilRate); ok {
-		return effect.Magnitude
-	}
-	return 0
-}
-
 // IsReady returns true if the ritual can be activated.
 func (r *Ritual) IsReady() bool {
 	return r.CooldownRemaining <= 0

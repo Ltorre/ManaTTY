@@ -255,9 +255,9 @@ func (m Model) viewTower() string {
 				for _, effect := range comboInfo.Effects {
 					icon := game.GetRitualEffectIcon(effect.Type)
 					effectStr := game.GetEffectDisplayString(effect)
-					effectStrs = append(effectStrs, icon+effectStr)
+					effectStrs = append(effectStrs, icon+" "+effectStr)
 				}
-				lines = append(lines, HighlightStyle.Render("      "+strings.Join(effectStrs, " ")))
+				lines = append(lines, HighlightStyle.Render("      "+strings.Join(effectStrs, "  |  ")))
 			}
 		}
 	}
