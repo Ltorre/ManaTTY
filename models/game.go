@@ -38,6 +38,7 @@ type SessionData struct {
 	LastTickMs      int64     `bson:"last_tick_ms" json:"last_tick_ms"`
 	LastSavedAt     time.Time `bson:"last_saved_at" json:"last_saved_at"`
 	AutoCastEnabled bool      `bson:"auto_cast_enabled" json:"auto_cast_enabled"`
+	AutoCastSlots   []string  `bson:"auto_cast_slots" json:"auto_cast_slots"` // Spell IDs in auto-cast slots
 }
 
 // NewGameState creates a new game state with defaults.
@@ -78,6 +79,7 @@ func NewSessionData() *SessionData {
 		LastTickMs:      now.UnixMilli(),
 		LastSavedAt:     now,
 		AutoCastEnabled: true,
+		AutoCastSlots:   []string{}, // Start with empty slots
 	}
 }
 
@@ -131,6 +133,60 @@ func (gs *GameState) UpdateSession() {
 	now := time.Now()
 	gs.Session.LastTickMs = now.UnixMilli()
 	gs.Session.SessionDuration = now.UnixMilli() - gs.Session.SessionStartMs
+}
+
+// IsSpellInAutoCast returns true if a spell is in an auto-cast slot.
+func (gs *GameState) IsSpellInAutoCast(spellID string) bool {
+	for _, id := range gs.Session.AutoCastSlots {
+		if id == spellID {
+			return true
+		}
+	}
+	return false
+}
+
+// GetAutoCastSlotCount returns max auto-cast slots (base 2 + prestige bonuses).
+func (gs *GameState) GetAutoCastSlotCount() int {
+	base := 2
+	prestigeBonus := gs.PrestigeData.AutoCastSlotBonus
+	return base + prestigeBonus
+}
+
+// GetAvailableAutoCastSlots returns remaining slot capacity.
+func (gs *GameState) GetAvailableAutoCastSlots() int {
+	return gs.GetAutoCastSlotCount() - len(gs.Session.AutoCastSlots)
+}
+
+// AddSpellToAutoCast adds a spell to auto-cast slots if capacity allows.
+func (gs *GameState) AddSpellToAutoCast(spellID string) bool {
+	if gs.IsSpellInAutoCast(spellID) {
+		return false // Already in slot
+	}
+	if gs.GetAvailableAutoCastSlots() <= 0 {
+		return false // No slots available
+	}
+	gs.Session.AutoCastSlots = append(gs.Session.AutoCastSlots, spellID)
+	return true
+}
+
+// RemoveSpellFromAutoCast removes a spell from auto-cast slots.
+func (gs *GameState) RemoveSpellFromAutoCast(spellID string) bool {
+	for i, id := range gs.Session.AutoCastSlots {
+		if id == spellID {
+			gs.Session.AutoCastSlots = append(gs.Session.AutoCastSlots[:i], gs.Session.AutoCastSlots[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
+
+// ToggleSpellAutoCast adds or removes a spell from auto-cast.
+func (gs *GameState) ToggleSpellAutoCast(spellID string) bool {
+	if gs.IsSpellInAutoCast(spellID) {
+		gs.RemoveSpellFromAutoCast(spellID)
+		return false // Now disabled
+	}
+	return gs.AddSpellToAutoCast(spellID) // Returns true if added
 }
 
 // ResetForPrestige resets appropriate data for prestige.
