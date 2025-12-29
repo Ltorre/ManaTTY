@@ -251,8 +251,11 @@ func generateRitualName(spellIDs []string, elementCounts map[models.Element]int,
 		adjectives = append(adjectives, adjList[tier])
 	}
 
-	// Join adjectives
+	// Join adjectives, handling empty case
 	adjStr := strings.Join(adjectives, " ")
+	if adjStr == "" {
+		return "Ritual of " + noun
+	}
 
 	return "Ritual of " + adjStr + " " + noun
 }
@@ -283,7 +286,8 @@ func checkSignatureName(spellIDs []string) string {
 
 	if hasEcho {
 		for elem, count := range elementCounts {
-			if elem != models.ElementArcane && count >= 2 {
+			// Echo + exactly 2 same-element spells (max possible with 3-spell ritual)
+			if elem != models.ElementArcane && count == 2 {
 				return "Resonant " + elementDisplayName(elem)
 			}
 		}
