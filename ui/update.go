@@ -157,8 +157,8 @@ func (m Model) handleSpellsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.gameState != nil && m.selectedIndex < len(m.gameState.Spells)-1 {
 			m.selectedIndex++
 		}
-	case "enter", " ":
-		// Cast selected spell
+	case "enter":
+		// Cast selected spell manually
 		if m.gameState != nil && m.selectedIndex < len(m.gameState.Spells) {
 			spell := m.gameState.Spells[m.selectedIndex]
 			if err := m.engine.CastSpell(m.gameState, spell, true); err != nil {
@@ -167,10 +167,23 @@ func (m Model) handleSpellsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.ShowNotification(spell.Name + " cast!")
 			}
 		}
+	case " ":
+		// Toggle auto-cast slot for selected spell
+		if m.gameState != nil && m.engine != nil && m.selectedIndex < len(m.gameState.Spells) {
+			spell := m.gameState.Spells[m.selectedIndex]
+			inSlot, err := m.engine.ToggleSpellAutoCast(m.gameState, spell.ID)
+			if err != nil {
+				m.ShowNotification(err.Error())
+			} else if inSlot {
+				m.ShowNotification(spell.Name + " added to auto-cast")
+			} else {
+				m.ShowNotification(spell.Name + " removed from auto-cast")
+			}
+		}
 	case "esc", "b":
 		m.Navigate(ViewTower)
 	case "a":
-		// Toggle auto-cast
+		// Toggle auto-cast on/off
 		if m.engine != nil {
 			enabled := m.engine.ToggleAutoCast(m.gameState)
 			if enabled {
