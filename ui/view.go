@@ -246,7 +246,8 @@ func (m Model) viewSpells() string {
 	}
 
 	// Auto-Cast Loadout Panel
-	usedSlots := len(m.gameState.Session.AutoCastSlots)
+	slotSpellIDs := m.gameState.GetAutoCastSpellIDs()
+	usedSlots := len(slotSpellIDs)
 	maxSlots := m.gameState.GetAutoCastSlotCount()
 	autoCastStatus := "OFF"
 	if m.gameState.Session.AutoCastEnabled {
@@ -254,14 +255,9 @@ func (m Model) viewSpells() string {
 	}
 	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("⚡ Auto-Cast Loadout [%s] (%d/%d slots)", autoCastStatus, usedSlots, maxSlots)))
 
-	// Determine which slot list to use (prefer new configs, fallback to legacy)
-	var slotSpellIDs []string
-	if len(m.gameState.Session.AutoCastConfigs) > 0 {
-		for _, cfg := range m.gameState.Session.AutoCastConfigs {
-			slotSpellIDs = append(slotSpellIDs, cfg.SpellID)
-		}
-	} else {
-		slotSpellIDs = m.gameState.Session.AutoCastSlots
+	idxBySpellID := map[string]int{}
+	for i, id := range slotSpellIDs {
+		idxBySpellID[id] = i
 	}
 
 	if len(slotSpellIDs) == 0 {
@@ -276,6 +272,25 @@ func (m Model) viewSpells() string {
 				lines = append(lines, TextStyle.Render(fmt.Sprintf("  %d. %s %s (Lv%d) [%s]", i+1, icon, spell.Name, spell.Level, condStr)))
 			}
 		}
+	}
+
+	// Elemental Resonance: passive bonuses from themed loadouts (2+ spells of same element)
+	counts := m.gameState.GetAutoCastElementCounts()
+	resLines := []string{}
+	if counts[models.ElementFire] >= game.ElementalResonanceMinSpells {
+		resLines = append(resLines, fmt.Sprintf("%s Fire x%d (+%.0f%% dmg)", GetElementIcon(string(models.ElementFire)), counts[models.ElementFire], game.ResonanceFireDamageBonus*100))
+	}
+	if counts[models.ElementIce] >= game.ElementalResonanceMinSpells {
+		resLines = append(resLines, fmt.Sprintf("%s Ice x%d (-%.0f%% CD)", GetElementIcon(string(models.ElementIce)), counts[models.ElementIce], game.ResonanceIceCooldownReduction*100))
+	}
+	if counts[models.ElementThunder] >= game.ElementalResonanceMinSpells {
+		resLines = append(resLines, fmt.Sprintf("%s Thunder x%d (-%.0f%% cost)", GetElementIcon(string(models.ElementThunder)), counts[models.ElementThunder], game.ResonanceThunderManaCostReduction*100))
+	}
+	if counts[models.ElementArcane] >= game.ElementalResonanceMinSpells {
+		resLines = append(resLines, fmt.Sprintf("%s Arcane x%d (+%.0f%% sigil)", GetElementIcon(string(models.ElementArcane)), counts[models.ElementArcane], game.ResonanceArcaneSigilChargeBonus*100))
+	}
+	if len(resLines) > 0 {
+		lines = append(lines, DimStyle.Render("Resonance: "+strings.Join(resLines, "  |  ")))
 	}
 	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
 	lines = append(lines, "")
@@ -293,11 +308,8 @@ func (m Model) viewSpells() string {
 
 		// Auto-cast indicator with position
 		autoIndicator := "   "
-		for idx, slotID := range m.gameState.Session.AutoCastSlots {
-			if slotID == spell.ID {
-				autoIndicator = fmt.Sprintf("[%d]", idx+1)
-				break
-			}
+		if idx, ok := idxBySpellID[spell.ID]; ok {
+			autoIndicator = fmt.Sprintf("[%d]", idx+1)
 		}
 
 		// Status

@@ -46,8 +46,8 @@ type Model struct {
 	maxIndex      int
 
 	// Confirmation dialogs
-	confirming  bool
-	confirmText string
+	confirming    bool
+	confirmText   string
 	confirmAction string
 
 	// Notifications
