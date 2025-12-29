@@ -8,7 +8,7 @@ You are a wizard climbing a magical tower! Cast spells to earn mana/experience a
 
 ## 📋 Project Status
 
-**Current Phase:** Game Engine Core
+**Current Phase:** Bubble Tea UI Framework
 
 ### Milestones
 
@@ -17,6 +17,7 @@ You are a wizard climbing a magical tower! Cast spells to earn mana/experience a
 - [x] **Milestone 3:** Game constants & formulas
 - [x] **Milestone 4:** MongoDB storage layer
 - [x] **Milestone 5:** Game engine core
+- [x] **Milestone 6:** Bubble Tea UI foundation
 - [ ] **Milestone 3:** Game constants & formulas
 - [ ] **Milestone 4:** MongoDB storage layer
 - [ ] **Milestone 5:** Game engine core
