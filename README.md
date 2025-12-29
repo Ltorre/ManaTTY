@@ -8,13 +8,14 @@ You are a wizard climbing a magical tower! Cast spells to earn mana/experience a
 
 ## 📋 Project Status
 
-**Current Phase:** Game Constants & Formulas
+**Current Phase:** MongoDB Storage Layer
 
 ### Milestones
 
 - [x] **Milestone 1:** Project initialization & structure
 - [x] **Milestone 2:** Core data models
 - [x] **Milestone 3:** Game constants & formulas
+- [x] **Milestone 4:** MongoDB storage layer
 - [ ] **Milestone 3:** Game constants & formulas
 - [ ] **Milestone 4:** MongoDB storage layer
 - [ ] **Milestone 5:** Game engine core
