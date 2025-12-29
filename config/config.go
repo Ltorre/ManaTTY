@@ -12,6 +12,9 @@ type Config struct {
 	// MongoDB settings
 	MongoDBURI string
 
+	// Storage mode: "mongodb" or "local"
+	StorageMode string
+
 	// Game settings
 	GameTickRate     int // Ticks per second
 	AutoSaveInterval int // Seconds between auto-saves
@@ -24,9 +27,11 @@ type Config struct {
 }
 
 // DefaultConfig returns configuration with default values.
+// When no .env file exists, the game runs in local storage mode.
 func DefaultConfig() *Config {
 	return &Config{
-		MongoDBURI:       "mongodb://localhost:27017/mage_tower",
+		MongoDBURI:       "", // Empty = local storage mode
+		StorageMode:      "local",
 		GameTickRate:     10,
 		AutoSaveInterval: 30,
 		LogLevel:         "info",
@@ -41,9 +46,10 @@ func Load() (*Config, error) {
 
 	cfg := DefaultConfig()
 
-	// MongoDB
+	// MongoDB - if URI is set, use MongoDB storage mode
 	if uri := os.Getenv("MONGODB_URI"); uri != "" {
 		cfg.MongoDBURI = uri
+		cfg.StorageMode = "mongodb"
 	}
 
 	// Game settings

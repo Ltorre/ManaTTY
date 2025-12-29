@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Ltorre/ManaTTY/models"
+	"github.com/Ltorre/ManaTTY/ui"
 	"github.com/Ltorre/ManaTTY/utils"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -83,19 +84,21 @@ func SpellList(spells []*models.Spell, selectedIndex int, showDetails bool) stri
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
-// GetElementIcon returns an emoji for an element.
+// GetElementIcon returns an icon for an element.
+// Uses ASCII fallbacks on Windows for compatibility.
 func GetElementIcon(element string) string {
+	sym := ui.GetSymbols()
 	switch element {
 	case "fire":
-		return "🔥"
+		return sym.Fire
 	case "ice":
-		return "❄️"
+		return sym.Ice
 	case "thunder":
-		return "⚡"
+		return sym.Thunder
 	case "arcane":
-		return "✨"
+		return sym.Arcane
 	default:
-		return "•"
+		return sym.Default
 	}
 }
 

@@ -21,8 +21,14 @@ import (
 )
 
 func main() {
-	fmt.Println("🏰 Mage Tower Ascension")
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━")
+	// Use ASCII-friendly symbols on legacy Windows CMD
+	if ui.SupportsEmoji() {
+		fmt.Println("🏰 Mage Tower Ascension")
+		fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━")
+	} else {
+		fmt.Println("# Mage Tower Ascension")
+		fmt.Println("-----------------------")
+	}
 
 	// Prompt for nickname
 	nickname := promptNickname()
@@ -38,40 +44,69 @@ func main() {
 	// Set log level
 	utils.SetLogLevel(utils.ParseLogLevel(cfg.LogLevel))
 
-	// Initialize database (optional)
+	// Initialize storage based on config
+	var saveStore storage.SaveStore
+	var playerStore storage.PlayerStore
 	var db *storage.Database
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	db = storage.NewDatabase()
-	if err := db.Connect(ctx, cfg.MongoDBURI); err != nil {
-		utils.Warn("Database connection failed: %v", err)
-		utils.Info("Running in offline mode (no saves)")
-		db = nil
-	} else {
-		utils.Info("Connected to MongoDB")
+	if cfg.StorageMode == "mongodb" && cfg.MongoDBURI != "" {
+		// Use MongoDB storage
+		db = storage.NewDatabase()
+		if err := db.Connect(ctx, cfg.MongoDBURI); err != nil {
+			utils.Warn("Database connection failed: %v", err)
+			utils.Info("Falling back to local storage")
+			cfg.StorageMode = "local"
+		} else {
+			utils.Info("Connected to MongoDB")
 
-		// Ensure indexes
-		if err := db.EnsureIndexes(ctx); err != nil {
-			utils.Warn("Failed to create indexes: %v", err)
+			// Ensure indexes
+			if err := db.EnsureIndexes(ctx); err != nil {
+				utils.Warn("Failed to create indexes: %v", err)
+			}
+
+			// Seed spell definitions
+			spellDefs := game.DefaultSpells()
+			if err := db.SeedSpellDefinitions(ctx, spellDefs); err != nil {
+				utils.Warn("Failed to seed spells: %v", err)
+			}
+
+			saveStore = storage.NewSaveRepository(db)
+			playerStore = storage.NewPlayerRepository(db)
 		}
+	}
 
-		// Seed spell definitions
-		spellDefs := game.DefaultSpells()
-		if err := db.SeedSpellDefinitions(ctx, spellDefs); err != nil {
-			utils.Warn("Failed to seed spells: %v", err)
+	// Fall back to local storage if MongoDB not available
+	if cfg.StorageMode == "local" || saveStore == nil {
+		utils.Info("Using local storage (~/.manatty/)")
+		var err error
+		saveStore, err = storage.NewJSONSaveStore()
+		if err != nil {
+			utils.Error("Failed to create local save store: %v", err)
+			os.Exit(1)
+		}
+		playerStore, err = storage.NewJSONPlayerStore()
+		if err != nil {
+			utils.Error("Failed to create local player store: %v", err)
+			os.Exit(1)
 		}
 	}
 
 	// Create or load game state
-	gameState, player := initializeGame(ctx, db, nickname)
+	gameState, player := initializeGame(ctx, saveStore, playerStore, nickname)
 
 	// Apply offline progress if we loaded a save
 	gameEngine := engine.NewGameEngine()
 	if gameState.SavedAt.After(time.Time{}) {
 		offlineProgress := gameEngine.ApplyOfflineProgress(gameState)
 		if offlineProgress.TimeOffline > time.Minute {
-			fmt.Printf("\n📊 Offline Progress: %s\n", engine.FormatOfflineProgress(offlineProgress))
+			if ui.SupportsEmoji() {
+				fmt.Printf("\n📊 Offline Progress: %s\n", engine.FormatOfflineProgress(offlineProgress))
+			} else {
+				fmt.Printf("\n* Offline Progress: %s\n", engine.FormatOfflineProgress(offlineProgress))
+			}
 			if offlineProgress.ManaGenerated > 0 {
 				fmt.Printf("   Mana earned: %s\n", utils.FormatNumber(offlineProgress.ManaGenerated))
 			}
@@ -88,7 +123,8 @@ func main() {
 	model.SetGameState(gameState)
 	model.SetPlayer(player)
 	model.SetEngine(gameEngine)
-	model.SetDatabase(db)
+	model.SetSaveStore(saveStore)
+	model.SetDatabase(db) // Keep for backward compatibility (may be nil)
 
 	// Run the TUI
 	p := tea.NewProgram(model, tea.WithAltScreen())
@@ -103,7 +139,7 @@ func main() {
 		_ = db.Disconnect(context.Background())
 	}
 
-	fmt.Println("\n👋 Thanks for playing Mage Tower Ascension!")
+	fmt.Println("\nThanks for playing Mage Tower Ascension!")
 }
 
 // promptNickname asks the user for their nickname to load or create a save.
@@ -120,21 +156,15 @@ func promptNickname() string {
 }
 
 // initializeGame creates or loads a game state for the given nickname.
-func initializeGame(ctx context.Context, db *storage.Database, nickname string) (*models.GameState, *models.Player) {
-	// Try to load existing save for this nickname
-	if db != nil {
-		saveRepo := storage.NewSaveRepository(db)
-		playerRepo := storage.NewPlayerRepository(db)
-
-		// Find player by username
-		player, err := playerRepo.GetByUsername(ctx, nickname)
-		if err == nil && player != nil {
-			// Load their latest save
-			gameState, err := saveRepo.LoadLatest(ctx, player.UUID)
-			if err == nil {
-				utils.Info("Loaded save for %s (Floor %d)", player.Username, gameState.Tower.CurrentFloor)
-				return gameState, player
-			}
+func initializeGame(ctx context.Context, saveStore storage.SaveStore, playerStore storage.PlayerStore, nickname string) (*models.GameState, *models.Player) {
+	// Try to find existing player by username
+	player, err := playerStore.GetByUsername(ctx, nickname)
+	if err == nil && player != nil {
+		// Load their latest save
+		gameState, err := saveStore.LoadLatest(ctx, player.UUID)
+		if err == nil {
+			utils.Info("Loaded save for %s (Floor %d)", player.Username, gameState.Tower.CurrentFloor)
+			return gameState, player
 		}
 	}
 
@@ -142,7 +172,7 @@ func initializeGame(ctx context.Context, db *storage.Database, nickname string) 
 	utils.Info("Creating new game for %s...", nickname)
 
 	playerUUID := uuid.New().String()
-	player := models.NewPlayer(playerUUID, nickname)
+	player = models.NewPlayer(playerUUID, nickname)
 
 	gameState := models.NewGameState(playerUUID, 0)
 
@@ -152,17 +182,12 @@ func initializeGame(ctx context.Context, db *storage.Database, nickname string) 
 	}
 
 	// Save new player and game
-	if db != nil {
-		playerRepo := storage.NewPlayerRepository(db)
-		saveRepo := storage.NewSaveRepository(db)
+	if err := playerStore.Create(ctx, player); err != nil {
+		utils.Warn("Failed to create player: %v", err)
+	}
 
-		if err := playerRepo.Create(ctx, player); err != nil {
-			utils.Warn("Failed to create player: %v", err)
-		}
-
-		if err := saveRepo.Save(ctx, gameState); err != nil {
-			utils.Warn("Failed to save game: %v", err)
-		}
+	if err := saveStore.Save(ctx, gameState); err != nil {
+		utils.Warn("Failed to save game: %v", err)
 	}
 
 	return gameState, player
