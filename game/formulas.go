@@ -62,6 +62,13 @@ func CalculateFloorsFromMana(startFloor int, availableMana float64) (floorsClimb
 	return floorsClimbed, remainingMana
 }
 
+// CalculateSigilRequired computes the damage needed to unlock ascension for a floor.
+// Formula: BaseDamage * Floor^Exponent * FloorFactor
+// This scales alongside mana cost to keep the two gates aligned.
+func CalculateSigilRequired(floor int) float64 {
+	return SigilBaseDamage * math.Pow(float64(floor), SigilScaleExponent) * SigilFloorFactor
+}
+
 // CalculateEraMultiplier returns the multiplier for a given era.
 func CalculateEraMultiplier(era int) float64 {
 	return EraMultiplierBase + (EraMultiplierPerEra * float64(era))
