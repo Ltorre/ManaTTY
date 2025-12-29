@@ -235,28 +235,29 @@ func (m Model) viewTower() string {
 		lines = append(lines, DimStyle.Render("  No active rituals"))
 	} else {
 		for i, ritual := range activeRituals {
-			cooldownStr := "Ready"
+			cooldownStr := SuccessStyle.Render("Ready")
 			if ritual.CooldownRemaining > 0 {
-				cooldownStr = utils.FormatCooldown(ritual.CooldownRemaining)
+				cooldownStr = WarningStyle.Render(utils.FormatCooldown(ritual.CooldownRemaining))
 			}
 
-			// Show ritual name (with signature if present)
-			ritualDisplay := ritual.Name
-			if ritual.SignatureName != "" {
-				ritualDisplay = fmt.Sprintf("%s \"%s\"", ritual.Name, ritual.SignatureName)
+			// Compute effects dynamically for legacy rituals or use stored ones
+			comboInfo := game.ComputeRitualCombo(ritual.SpellIDs)
+			ritualName := comboInfo.Name
+			if comboInfo.SignatureName != "" {
+				ritualName += " \"" + comboInfo.SignatureName + "\""
 			}
-			lines = append(lines, fmt.Sprintf("  [%d] %s (%s)",
-				i+1, ritualDisplay, cooldownStr))
 
-			// Show effect summary (v1.2.0)
-			if len(ritual.Effects) > 0 {
+			lines = append(lines, fmt.Sprintf("  [%d] %s (%s)", i+1, ritualName, cooldownStr))
+
+			// Show effect summary inline
+			if len(comboInfo.Effects) > 0 {
 				effectStrs := []string{}
-				for _, effect := range ritual.Effects {
+				for _, effect := range comboInfo.Effects {
 					icon := game.GetRitualEffectIcon(effect.Type)
 					effectStr := game.GetEffectDisplayString(effect)
 					effectStrs = append(effectStrs, icon+effectStr)
 				}
-				lines = append(lines, DimStyle.Render("      "+strings.Join(effectStrs, " ")))
+				lines = append(lines, HighlightStyle.Render("      "+strings.Join(effectStrs, " ")))
 			}
 		}
 	}
