@@ -48,6 +48,7 @@ type Model struct {
 	// Confirmation dialogs
 	confirming  bool
 	confirmText string
+	confirmAction string
 
 	// Notifications
 	notification     string
@@ -152,10 +153,18 @@ func (m *Model) StartConfirm(text string) {
 	m.confirmText = text
 }
 
+// StartConfirmAction starts a confirmation dialog with an associated action key.
+func (m *Model) StartConfirmAction(text string, action string) {
+	m.confirming = true
+	m.confirmText = text
+	m.confirmAction = action
+}
+
 // CancelConfirm cancels the confirmation dialog.
 func (m *Model) CancelConfirm() {
 	m.confirming = false
 	m.confirmText = ""
+	m.confirmAction = ""
 }
 
 // Message types for Bubble Tea

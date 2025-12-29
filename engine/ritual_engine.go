@@ -65,6 +65,13 @@ func (e *GameEngine) RemoveRitual(gs *models.GameState, ritualID string) error {
 	return ErrRitualNotFound
 }
 
+// ResetRituals removes all rituals from the save slot.
+// This is a safety valve to prevent players from permanently locking their ritual capacity.
+func (e *GameEngine) ResetRituals(gs *models.GameState) {
+	gs.Rituals = []*models.Ritual{}
+	gs.ActiveRitualCount = 0
+}
+
 // ToggleRitual activates or deactivates a ritual.
 func (e *GameEngine) ToggleRitual(gs *models.GameState, ritualID string) error {
 	for _, ritual := range gs.Rituals {

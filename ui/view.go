@@ -451,7 +451,7 @@ func (m Model) viewRituals() string {
 	lines = append(lines, "")
 
 	// Footer
-	lines = append(lines, FooterStyle.Render("[↑↓] Navigate  [Enter] Select  [C] Clear  [B/Esc] Back"))
+	lines = append(lines, FooterStyle.Render("[↑↓] Navigate  [Enter] Select  [C] Clear  [X] Reset Rituals  [B/Esc] Back"))
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
