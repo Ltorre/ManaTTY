@@ -25,6 +25,11 @@ func NewGameEngine() *GameEngine {
 
 // Tick processes a single game tick, updating all game state.
 func (e *GameEngine) Tick(gs *models.GameState, elapsed time.Duration) {
+	// Expire any timed floor event (vanishes with no bonus if unanswered)
+	gs.EnsureFloorEventExpiry(time.Now().UnixMilli())
+	// Expire any floor-based buff if its floor window has passed
+	gs.MaybeExpireFloorEventBuff(gs.Tower.CurrentFloor)
+
 	elapsedMs := elapsed.Milliseconds()
 	elapsedSec := elapsed.Seconds()
 
@@ -71,12 +76,19 @@ func (e *GameEngine) CalculateManaPerSecond(gs *models.GameState) float64 {
 	activeRituals := len(gs.GetActiveRituals())
 	permanentMultiplier := gs.PrestigeData.PermanentManaGenMultiplier
 
-	return game.CalculateManaPerSecondWithBonuses(
+	manaPerSec := game.CalculateManaPerSecondWithBonuses(
 		currentFloor,
 		currentEra,
 		activeRituals,
 		permanentMultiplier,
 	)
+
+	// Floor-event temporary bonus
+	if gs.GetActiveFloorBuffChoice(gs.Tower.CurrentFloor) == models.FloorEventChoiceManaGen {
+		manaPerSec *= (1.0 + game.FloorEventManaGenBonus)
+	}
+
+	return manaPerSec
 }
 
 // TryClimbFloor attempts to climb to the next floor.
@@ -101,6 +113,10 @@ func (e *GameEngine) TryClimbFloor(gs *models.GameState) bool {
 		// Check for spell unlocks
 		e.CheckSpellUnlocks(gs)
 
+		// Update/expire any floor-based event buff, then possibly start a new event.
+		gs.MaybeExpireFloorEventBuff(gs.Tower.CurrentFloor)
+		e.maybeStartFloorEvent(gs)
+
 		if e.OnFloorClimbed != nil {
 			e.OnFloorClimbed(gs.Tower.CurrentFloor)
 		}
@@ -109,6 +125,28 @@ func (e *GameEngine) TryClimbFloor(gs *models.GameState) bool {
 	}
 
 	return false
+}
+
+func (e *GameEngine) maybeStartFloorEvent(gs *models.GameState) {
+	// Only one pending event or active buff at a time.
+	if gs.Session.ActiveFloorEvent != nil {
+		return
+	}
+	if gs.HasActiveFloorEventBuff(gs.Tower.CurrentFloor) {
+		return
+	}
+	if gs.Tower.CurrentFloor <= 0 {
+		return
+	}
+	if gs.Tower.CurrentFloor%game.FloorEventIntervalFloors != 0 {
+		return
+	}
+	if gs.Session.LastFloorEventFloor == gs.Tower.CurrentFloor {
+		return
+	}
+
+	gs.Session.LastFloorEventFloor = gs.Tower.CurrentFloor
+	gs.StartFloorEvent(gs.Tower.CurrentFloor, time.Now(), game.FloorEventTimeoutMs)
 }
 
 // CheckSpellUnlocks checks if new spells should be unlocked at the current floor.

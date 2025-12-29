@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Ltorre/ManaTTY/game"
 	"github.com/Ltorre/ManaTTY/models"
@@ -33,6 +34,8 @@ func (m Model) View() string {
 		content = m.viewMenu()
 	case ViewSpecialize:
 		content = m.viewSpecialize()
+	case ViewFloorEvent:
+		content = m.viewFloorEvent()
 	default:
 		content = m.viewTower()
 	}
@@ -57,6 +60,58 @@ func (m Model) View() string {
 	}
 
 	return content
+}
+
+func (m Model) viewFloorEvent() string {
+	if m.gameState == nil || m.gameState.Session == nil || m.gameState.Session.ActiveFloorEvent == nil {
+		return "No active floor event"
+	}
+
+	evt := m.gameState.Session.ActiveFloorEvent
+	nowMs := time.Now().UnixMilli()
+	remainingMs := evt.ExpiresAtMs - nowMs
+	if remainingMs < 0 {
+		remainingMs = 0
+	}
+	remaining := time.Duration(remainingMs) * time.Millisecond
+	mins := int(remaining.Minutes())
+	secs := int(remaining.Seconds()) % 60
+
+	var lines []string
+	header := HeaderStyle.Width(60).Render(
+		TitleStyle.Render("✨ FLOOR EVENT"),
+	)
+	lines = append(lines, header)
+	lines = append(lines, "")
+	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("A choice appears on Floor %d", evt.Floor)))
+	lines = append(lines, DimStyle.Render(fmt.Sprintf("Expires in %dm%02ds (auto-dismisses with no bonus)", mins, secs)))
+	lines = append(lines, "")
+
+	opts := []struct {
+		Choice models.FloorEventChoice
+		Text   string
+	}{
+		{models.FloorEventChoiceManaGen, fmt.Sprintf("+%.0f%% mana/sec for %d floors", game.FloorEventManaGenBonus*100, game.FloorEventBuffDurationFloors)},
+		{models.FloorEventChoiceSigilChargeRate, fmt.Sprintf("+%.0f%% sigil charge for %d floors", game.FloorEventSigilChargeRateBonus*100, game.FloorEventBuffDurationFloors)},
+		{models.FloorEventChoiceCooldownReduction, fmt.Sprintf("-%.0f%% spell cooldown for %d floors", game.FloorEventCooldownReduction*100, game.FloorEventBuffDurationFloors)},
+	}
+
+	lines = append(lines, SubtitleStyle.Render("Choose one:"))
+	for i, opt := range opts {
+		prefix := "  "
+		style := TextStyle
+		if i == m.selectedIndex {
+			prefix = "> "
+			style = HighlightStyle
+		}
+		name := models.FloorEventChoiceDisplayNames[opt.Choice]
+		lines = append(lines, style.Render(fmt.Sprintf("%s[%d] %s — %s", prefix, i+1, name, opt.Text)))
+	}
+
+	lines = append(lines, "")
+	lines = append(lines, DimStyle.Render("[1/2/3 or Enter] Select  |  [Esc] Ignore"))
+
+	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
 // viewTower renders the main tower view.
