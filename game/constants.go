@@ -31,6 +31,19 @@ const (
 	MinSpellCooldownMs = 1000 // Minimum 1 second cooldown
 	ManualCastPenalty  = 0.10 // 10% extra mana cost for manual cast
 
+	// Spell Leveling
+	SpellUpgradeBaseCost     = 500.0  // Base mana cost to upgrade a spell
+	SpellUpgradeCostExponent = 1.5    // Cost scaling per level
+	SpellMaxLevel            = 10     // Maximum spell level
+	SpellCooldownPerLevel    = 0.05   // -5% cooldown per level
+	SpellManaCostPerLevel    = 0.08   // -8% mana cost per level
+	SpellDamagePerLevel      = 0.15   // +15% damage per level
+
+	// Element Synergies
+	ElementStreakRequired  = 3    // Casts of same element to trigger synergy
+	ElementSynergyDuration = 10.0 // Seconds the synergy buff lasts
+	ElementSynergyBonus    = 0.20 // +20% bonus during synergy
+
 	// Offline Progress
 	OfflinePenalty    = 0.50 // 50% mana generation while offline
 	MinOfflineSeconds = 1    // Minimum offline time to process

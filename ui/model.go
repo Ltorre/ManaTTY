@@ -53,8 +53,9 @@ type Model struct {
 	notificationTime time.Time
 
 	// Timing
-	lastUpdate   time.Time
-	tickInterval time.Duration
+	lastUpdate       time.Time
+	tickInterval     time.Duration
+	lastSkipCheckAt  time.Time // For aggregated mana hints
 
 	// Error handling
 	lastError error
@@ -65,12 +66,14 @@ type Model struct {
 
 // NewModel creates a new UI model.
 func NewModel() *Model {
+	now := time.Now()
 	return &Model{
-		currentView:  ViewTower,
-		previousView: ViewTower,
-		lastUpdate:   time.Now(),
-		tickInterval: 100 * time.Millisecond, // 10 FPS
-		ritualSpells: make([]string, 0, 3),
+		currentView:    ViewTower,
+		previousView:   ViewTower,
+		lastUpdate:     now,
+		lastSkipCheckAt: now,
+		tickInterval:   100 * time.Millisecond, // 10 FPS
+		ritualSpells:   make([]string, 0, 3),
 	}
 }
 
