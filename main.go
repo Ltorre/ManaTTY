@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -21,6 +23,10 @@ import (
 func main() {
 	fmt.Println("🏰 Mage Tower Ascension")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━")
+
+	// Prompt for nickname
+	nickname := promptNickname()
+
 	fmt.Println("Loading...")
 
 	// Load configuration
@@ -58,7 +64,7 @@ func main() {
 	}
 
 	// Create or load game state
-	gameState, player := initializeGame(ctx, db)
+	gameState, player := initializeGame(ctx, db, nickname)
 
 	// Apply offline progress if we loaded a save
 	gameEngine := engine.NewGameEngine()
@@ -100,18 +106,29 @@ func main() {
 	fmt.Println("\n👋 Thanks for playing Mage Tower Ascension!")
 }
 
-// initializeGame creates or loads a game state.
-func initializeGame(ctx context.Context, db *storage.Database) (*models.GameState, *models.Player) {
-	// Try to load existing save
+// promptNickname asks the user for their nickname to load or create a save.
+func promptNickname() string {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("\nEnter your nickname (or press Enter for 'Wizard'): ")
+	nickname, _ := reader.ReadString('\n')
+	nickname = strings.TrimSpace(nickname)
+	if nickname == "" {
+		nickname = "Wizard"
+	}
+	fmt.Printf("Welcome, %s!\n\n", nickname)
+	return nickname
+}
+
+// initializeGame creates or loads a game state for the given nickname.
+func initializeGame(ctx context.Context, db *storage.Database, nickname string) (*models.GameState, *models.Player) {
+	// Try to load existing save for this nickname
 	if db != nil {
 		saveRepo := storage.NewSaveRepository(db)
 		playerRepo := storage.NewPlayerRepository(db)
 
-		// Try to find existing player (for simplicity, use first found)
-		players, err := playerRepo.List(ctx, 1, 0)
-		if err == nil && len(players) > 0 {
-			player := players[0]
-
+		// Find player by username
+		player, err := playerRepo.GetByUsername(ctx, nickname)
+		if err == nil && player != nil {
 			// Load their latest save
 			gameState, err := saveRepo.LoadLatest(ctx, player.UUID)
 			if err == nil {
@@ -121,11 +138,11 @@ func initializeGame(ctx context.Context, db *storage.Database) (*models.GameStat
 		}
 	}
 
-	// Create new game
-	utils.Info("Creating new game...")
+	// Create new game for this nickname
+	utils.Info("Creating new game for %s...", nickname)
 
 	playerUUID := uuid.New().String()
-	player := models.NewPlayer(playerUUID, "Wizard")
+	player := models.NewPlayer(playerUUID, nickname)
 
 	gameState := models.NewGameState(playerUUID, 0)
 
