@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -21,8 +22,14 @@ import (
 )
 
 func main() {
-	fmt.Println("🏰 Mage Tower Ascension")
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━")
+	// Use ASCII-friendly symbols on Windows
+	if runtime.GOOS == "windows" {
+		fmt.Println("# Mage Tower Ascension")
+		fmt.Println("-----------------------")
+	} else {
+		fmt.Println("🏰 Mage Tower Ascension")
+		fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━")
+	}
 
 	// Prompt for nickname
 	nickname := promptNickname()
@@ -96,7 +103,11 @@ func main() {
 	if gameState.SavedAt.After(time.Time{}) {
 		offlineProgress := gameEngine.ApplyOfflineProgress(gameState)
 		if offlineProgress.TimeOffline > time.Minute {
-			fmt.Printf("\n📊 Offline Progress: %s\n", engine.FormatOfflineProgress(offlineProgress))
+			if runtime.GOOS == "windows" {
+				fmt.Printf("\n* Offline Progress: %s\n", engine.FormatOfflineProgress(offlineProgress))
+			} else {
+				fmt.Printf("\n📊 Offline Progress: %s\n", engine.FormatOfflineProgress(offlineProgress))
+			}
 			if offlineProgress.ManaGenerated > 0 {
 				fmt.Printf("   Mana earned: %s\n", utils.FormatNumber(offlineProgress.ManaGenerated))
 			}
@@ -129,7 +140,7 @@ func main() {
 		_ = db.Disconnect(context.Background())
 	}
 
-	fmt.Println("\n👋 Thanks for playing Mage Tower Ascension!")
+	fmt.Println("\nThanks for playing Mage Tower Ascension!")
 }
 
 // promptNickname asks the user for their nickname to load or create a save.

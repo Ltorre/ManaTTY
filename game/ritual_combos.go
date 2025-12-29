@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -333,8 +334,23 @@ func GetEffectDisplayString(effect models.RitualEffect) string {
 	return fmt.Sprintf("%s%d%%%s", sign, percent, suffix)
 }
 
-// GetRitualEffectIcon returns an emoji icon for the effect type.
+// GetRitualEffectIcon returns an icon for the effect type.
+// Uses ASCII fallbacks on Windows for compatibility.
 func GetRitualEffectIcon(effectType models.RitualEffectType) string {
+	if isWindows() {
+		switch effectType {
+		case models.RitualEffectDamage:
+			return "[F]"
+		case models.RitualEffectCooldown:
+			return "[I]"
+		case models.RitualEffectManaCost:
+			return "[T]"
+		case models.RitualEffectSigilRate:
+			return "[A]"
+		default:
+			return "[*]"
+		}
+	}
 	switch effectType {
 	case models.RitualEffectDamage:
 		return "🔥"
@@ -347,4 +363,9 @@ func GetRitualEffectIcon(effectType models.RitualEffectType) string {
 	default:
 		return "⭐"
 	}
+}
+
+// isWindows returns true if running on Windows.
+func isWindows() bool {
+	return runtime.GOOS == "windows"
 }

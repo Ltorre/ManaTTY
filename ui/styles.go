@@ -135,19 +135,21 @@ func GetElementStyle(element string) lipgloss.Style {
 	}
 }
 
-// GetElementIcon returns an emoji/icon for an element type.
+// GetElementIcon returns an icon for an element type.
+// Uses ASCII fallbacks on Windows for compatibility.
 func GetElementIcon(element string) string {
+	sym := GetSymbols()
 	switch element {
 	case "fire":
-		return "🔥"
+		return sym.Fire
 	case "ice":
-		return "❄️"
+		return sym.Ice
 	case "thunder":
-		return "⚡"
+		return sym.Thunder
 	case "arcane":
-		return "✨"
+		return sym.Arcane
 	default:
-		return "•"
+		return sym.Default
 	}
 }
 

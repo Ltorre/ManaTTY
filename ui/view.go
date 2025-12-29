@@ -77,9 +77,10 @@ func (m Model) viewFloorEvent() string {
 	mins := int(remaining.Minutes())
 	secs := int(remaining.Seconds()) % 60
 
+	sym := GetSymbols()
 	var lines []string
 	header := HeaderStyle.Width(60).Render(
-		TitleStyle.Render("✨ FLOOR EVENT"),
+		TitleStyle.Render(sym.Event + " FLOOR EVENT"),
 	)
 	lines = append(lines, header)
 	lines = append(lines, "")
@@ -124,12 +125,13 @@ func (m Model) viewTower() string {
 	var lines []string
 
 	// Header
+	sym := GetSymbols()
 	era := ""
 	if gs.PrestigeData.CurrentEra > 0 {
 		era = fmt.Sprintf(" - ERA %d", gs.PrestigeData.CurrentEra)
 	}
 	header := HeaderStyle.Width(60).Render(
-		TitleStyle.Render("🏰 MAGE TOWER ASCENSION" + era),
+		TitleStyle.Render(sym.Tower + " MAGE TOWER ASCENSION" + era),
 	)
 	lines = append(lines, header)
 	lines = append(lines, "")
@@ -150,7 +152,7 @@ func (m Model) viewTower() string {
 		ProgressBarEmpty.Render(strings.Repeat("░", barWidth-filled))
 
 	percentage := int(progress * 100)
-	manaStr := fmt.Sprintf("💎 Mana   [%s] %d%% (%s / %s)",
+	manaStr := fmt.Sprintf(sym.Mana+" Mana   [%s] %d%% (%s / %s)",
 		bar,
 		percentage,
 		utils.FormatNumber(gs.Tower.CurrentMana),
@@ -181,7 +183,7 @@ func (m Model) viewTower() string {
 
 	// Stats section
 	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
-	lines = append(lines, SubtitleStyle.Render("📊 STATS"))
+	lines = append(lines, SubtitleStyle.Render(sym.Stats + " STATS"))
 
 	if m.engine != nil {
 		manaPerSec := m.engine.CalculateManaPerSecond(gs)
@@ -228,7 +230,7 @@ func (m Model) viewTower() string {
 	// Active rituals
 	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
 	activeRituals := gs.GetActiveRituals()
-	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("🔥 ACTIVE RITUALS (%d/%d)",
+	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf(sym.Ritual + " ACTIVE RITUALS (%d/%d)",
 		len(activeRituals), gs.PrestigeData.RitualCapacity)))
 
 	if len(activeRituals) == 0 {
@@ -273,10 +275,11 @@ func (m Model) viewTower() string {
 
 // viewMenu renders the menu view.
 func (m Model) viewMenu() string {
+	sym := GetSymbols()
 	var lines []string
 
 	header := HeaderStyle.Width(50).Render(
-		TitleStyle.Render("📋 MENU"),
+		TitleStyle.Render(sym.Bullet + " MENU"),
 	)
 	lines = append(lines, header)
 	lines = append(lines, "")
@@ -295,15 +298,16 @@ func (m Model) viewSpells() string {
 		return "No game loaded"
 	}
 
+	sym := GetSymbols()
 	var lines []string
 
 	header := HeaderStyle.Width(70).Render(
-		TitleStyle.Render("📜 SPELLS"),
+		TitleStyle.Render(sym.Bullet + " SPELLS"),
 	)
 	lines = append(lines, header)
 
 	// Current mana display
-	manaStr := fmt.Sprintf("💎 Mana: %s / %s",
+	manaStr := fmt.Sprintf(sym.Mana+" Mana: %s / %s",
 		utils.FormatNumber(m.gameState.Tower.CurrentMana),
 		utils.FormatNumber(m.gameState.Tower.MaxMana))
 	lines = append(lines, HighlightStyle.Render(manaStr))
@@ -314,7 +318,7 @@ func (m Model) viewSpells() string {
 		synergy := m.gameState.GetActiveSynergy()
 		remaining := m.gameState.GetSynergyTimeRemaining() / 1000
 		icon := GetElementIcon(string(synergy))
-		lines = append(lines, SuccessStyle.Render(fmt.Sprintf("🔥 %s SYNERGY ACTIVE! +20%% bonus (%ds remaining)", icon, remaining)))
+		lines = append(lines, SuccessStyle.Render(fmt.Sprintf("%s %s SYNERGY ACTIVE! +20%% bonus (%ds remaining)", sym.Synergy, icon, remaining)))
 		lines = append(lines, "")
 	}
 
@@ -326,7 +330,7 @@ func (m Model) viewSpells() string {
 	if m.gameState.Session.AutoCastEnabled {
 		autoCastStatus = "ON"
 	}
-	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("⚡ Auto-Cast Loadout [%s] (%d/%d slots)", autoCastStatus, usedSlots, maxSlots)))
+	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf(sym.AutoCast + " Auto-Cast Loadout [%s] (%d/%d slots)", autoCastStatus, usedSlots, maxSlots)))
 
 	idxBySpellID := map[string]int{}
 	for i, id := range slotSpellIDs {
@@ -736,8 +740,9 @@ func (m Model) viewSpecialize() string {
 		return "Spell not found"
 	}
 
+	sym := GetSymbols()
 	lines := []string{}
-	lines = append(lines, TitleStyle.Render("🔮 Spell Specialization"))
+	lines = append(lines, TitleStyle.Render(sym.Star+" Spell Specialization"))
 	lines = append(lines, "")
 	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("Choose a Tier %d specialization for %s (Lv%d)", m.specTier, spell.Name, spell.Level)))
 	lines = append(lines, "")
