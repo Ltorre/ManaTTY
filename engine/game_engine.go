@@ -150,17 +150,28 @@ func (e *GameEngine) UpdateRitualCooldowns(gs *models.GameState, elapsedMs int64
 
 // ProcessAutoCasts automatically casts spells in auto-cast slots if mana is available.
 // Only spells assigned to auto-cast slots will be cast automatically.
-func (e *GameEngine) ProcessAutoCasts(gs *models.GameState) {
+// Returns the number of spells skipped due to insufficient mana.
+func (e *GameEngine) ProcessAutoCasts(gs *models.GameState) int {
+	skipped := 0
 	for _, spellID := range gs.Session.AutoCastSlots {
 		spell := gs.GetSpellByID(spellID)
 		if spell != nil && spell.IsReady() {
 			// CastSpell will check mana and skip if insufficient
 			if err := e.CastSpell(gs, spell, false); err == ErrInsufficientMana {
-				// Not enough mana, continue to next slot
+				skipped++
 				continue
 			}
 		}
 	}
+	gs.Session.AutoCastSkipCount += skipped
+	return skipped
+}
+
+// GetAndResetSkipCount returns the accumulated skip count and resets it.
+func (e *GameEngine) GetAndResetSkipCount(gs *models.GameState) int {
+	count := gs.Session.AutoCastSkipCount
+	gs.Session.AutoCastSkipCount = 0
+	return count
 }
 
 // GetFloorProgress returns progress towards the next floor (0.0 to 1.0).
