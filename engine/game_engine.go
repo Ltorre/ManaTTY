@@ -39,8 +39,9 @@ func (e *GameEngine) Tick(gs *models.GameState, elapsed time.Duration) {
 
 	// Update floor requirements (mana and sigil)
 	gs.Tower.MaxMana = game.CalculateFloorCost(gs.Tower.CurrentFloor)
-	if gs.Tower.SigilRequired <= 0 {
-		gs.Tower.SigilRequired = game.CalculateSigilRequired(gs.Tower.CurrentFloor)
+	gs.Tower.SigilRequired = game.CalculateSigilRequired(gs.Tower.CurrentFloor)
+	if gs.Tower.SigilCharge > gs.Tower.SigilRequired {
+		gs.Tower.SigilCharge = gs.Tower.SigilRequired
 	}
 
 	// Try to climb floors
