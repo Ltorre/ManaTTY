@@ -85,12 +85,13 @@ DEBUG=false
 ## 🎯 Core Mechanics
 
 - **Mana Generation:** Earn mana passively based on your current floor
+- **Ascension Sigil:** Deal damage by casting spells to charge the sigil—both mana AND sigil must be full to climb!
 - **Floor Climbing:** Spend mana to ascend to higher floors (cost scales exponentially)
 - **Spells:** Unlock and cast 12 unique spells across 4 elements (Fire, Ice, Thunder, Arcane)
 - **Spell Leveling:** Spend mana to upgrade spells (max level 10) for reduced cooldown, lower mana cost, and increased damage
 - **Auto-Cast Slots:** Assign spells to limited auto-cast slots (base 2, up to 4 with prestige)
 - **Slot Priority:** Reorder auto-cast slots to control which spells cast first
-- **Element Synergies:** Cast 3 spells of the same element in a row for a 10-second buff (20% reduced cost & cooldown)
+- **Element Synergies:** Cast 3 spells of the same element in a row for a 10-second buff (20% reduced cost, cooldown & +20% damage)
 - **Mana Economy:** All spells (auto and manual) consume mana—choose your auto-cast loadout wisely!
 - **Manual Casting:** Cast any spell manually (+10% mana cost) for tactical control
 - **Rituals:** Combine 3 spells for +15% mana generation per ritual

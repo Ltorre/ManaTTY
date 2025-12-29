@@ -92,13 +92,33 @@ func (m Model) viewTower() string {
 		ProgressBarEmpty.Render(strings.Repeat("░", barWidth-filled))
 
 	percentage := int(progress * 100)
-	manaStr := fmt.Sprintf("[%s] %d%% (%s / %s)",
+	manaStr := fmt.Sprintf("💎 Mana   [%s] %d%% (%s / %s)",
 		bar,
 		percentage,
 		utils.FormatNumber(gs.Tower.CurrentMana),
 		utils.FormatNumber(gs.Tower.MaxMana),
 	)
 	lines = append(lines, manaStr)
+
+	// Ascension Sigil progress bar
+	sigilProgress := gs.Tower.GetSigilProgress()
+	sigilFilled := int(sigilProgress * float64(barWidth))
+	sigilBar := ProgressBarFilled.Render(strings.Repeat("█", sigilFilled)) +
+		ProgressBarEmpty.Render(strings.Repeat("░", barWidth-sigilFilled))
+	sigilPercent := int(sigilProgress * 100)
+
+	sigilStatus := ""
+	if gs.Tower.IsSigilCharged() {
+		sigilStatus = SuccessStyle.Render(" ✓ READY")
+	}
+	sigilStr := fmt.Sprintf("⚔️ Sigil  [%s] %d%% (%.0f / %.0f)%s",
+		sigilBar,
+		sigilPercent,
+		gs.Tower.SigilCharge,
+		gs.Tower.SigilRequired,
+		sigilStatus,
+	)
+	lines = append(lines, sigilStr)
 	lines = append(lines, "")
 
 	// Stats section
