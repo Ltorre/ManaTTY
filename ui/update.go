@@ -105,12 +105,22 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m Model) handleConfirmKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "y", "Y", "enter":
+		action := m.confirmAction
 		m.CancelConfirm()
-		// Handle confirmed action based on view
-		if m.currentView == ViewPrestige {
+		// Handle confirmed action based on action key
+		switch action {
+		case "prestige":
 			return m.handlePrestigeConfirmed()
+		case "reset_rituals":
+			if m.engine != nil && m.gameState != nil {
+				m.engine.ResetRituals(m.gameState)
+				m.ritualSpells = []string{}
+				m.ShowNotification("Rituals reset")
+			}
+			return m, nil
+		default:
+			return m, nil
 		}
-		return m, nil
 
 	case "n", "N", "esc":
 		m.CancelConfirm()
@@ -307,6 +317,13 @@ func (m Model) handleRitualsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Clear ritual builder
 		m.ritualSpells = []string{}
 		m.ShowNotification("Selection cleared")
+	case "x":
+		// Reset all rituals (free up ritual slots)
+		if m.gameState != nil && len(m.gameState.Rituals) > 0 {
+			m.StartConfirmAction("Reset ALL rituals for this save? (y/n)", "reset_rituals")
+		} else {
+			m.ShowNotification("No rituals to reset")
+		}
 	case "esc", "b":
 		m.ritualSpells = []string{}
 		m.Navigate(ViewTower)
@@ -327,7 +344,7 @@ func (m Model) handleStatsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m Model) handlePrestigeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "enter":
-		m.StartConfirm("Are you sure you want to prestige? (y/n)")
+		m.StartConfirmAction("Are you sure you want to prestige? (y/n)", "prestige")
 	case "esc", "b":
 		m.Navigate(ViewTower)
 	}
