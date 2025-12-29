@@ -116,3 +116,61 @@ func (e *GameEngine) ToggleAutoCast(gs *models.GameState) bool {
 func (e *GameEngine) SetAutoCast(gs *models.GameState, enabled bool) {
 	gs.Session.AutoCastEnabled = enabled
 }
+
+// ErrNoAutoCastSlots is returned when all auto-cast slots are full.
+var ErrNoAutoCastSlots = errors.New("no auto-cast slots available")
+
+// ToggleSpellAutoCast adds or removes a spell from auto-cast slots.
+// Returns (isNowInSlot, error). Error is non-nil if slots are full when trying to add.
+func (e *GameEngine) ToggleSpellAutoCast(gs *models.GameState, spellID string) (bool, error) {
+	// Verify spell exists
+	if gs.GetSpellByID(spellID) == nil {
+		return false, ErrSpellNotFound
+	}
+	
+	result := gs.ToggleSpellAutoCast(spellID)
+	switch result {
+	case models.AutoCastAdded:
+		return true, nil
+	case models.AutoCastRemoved:
+		return false, nil
+	case models.AutoCastSlotsFull:
+		return false, ErrNoAutoCastSlots
+	default:
+		return false, nil
+	}
+}
+
+// AddSpellToAutoCast adds a spell to an auto-cast slot.
+func (e *GameEngine) AddSpellToAutoCast(gs *models.GameState, spellID string) error {
+	if gs.GetSpellByID(spellID) == nil {
+		return ErrSpellNotFound
+	}
+	if gs.IsSpellInAutoCast(spellID) {
+		return nil // Already in slot
+	}
+	if !gs.AddSpellToAutoCast(spellID) {
+		return errors.New("no auto-cast slots available")
+	}
+	return nil
+}
+
+// RemoveSpellFromAutoCast removes a spell from auto-cast slots.
+func (e *GameEngine) RemoveSpellFromAutoCast(gs *models.GameState, spellID string) {
+	gs.RemoveSpellFromAutoCast(spellID)
+}
+
+// GetAutoCastSlots returns the current auto-cast slot configuration.
+func (e *GameEngine) GetAutoCastSlots(gs *models.GameState) []string {
+	return gs.Session.AutoCastSlots
+}
+
+// GetMaxAutoCastSlots returns total available slots.
+func (e *GameEngine) GetMaxAutoCastSlots(gs *models.GameState) int {
+	return gs.GetAutoCastSlotCount()
+}
+
+// GetUsedAutoCastSlots returns number of slots in use.
+func (e *GameEngine) GetUsedAutoCastSlots(gs *models.GameState) int {
+	return len(gs.Session.AutoCastSlots)
+}
