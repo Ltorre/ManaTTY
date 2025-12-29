@@ -180,13 +180,26 @@ func (gs *GameState) RemoveSpellFromAutoCast(spellID string) bool {
 	return false
 }
 
+// AutoCastToggleResult represents the result of toggling auto-cast.
+type AutoCastToggleResult int
+
+const (
+	AutoCastRemoved      AutoCastToggleResult = iota // Spell was removed from slot
+	AutoCastAdded                                     // Spell was added to slot
+	AutoCastSlotsFull                                 // Failed: no slots available
+)
+
 // ToggleSpellAutoCast adds or removes a spell from auto-cast.
-func (gs *GameState) ToggleSpellAutoCast(spellID string) bool {
+// Returns the result of the toggle operation.
+func (gs *GameState) ToggleSpellAutoCast(spellID string) AutoCastToggleResult {
 	if gs.IsSpellInAutoCast(spellID) {
 		gs.RemoveSpellFromAutoCast(spellID)
-		return false // Now disabled
+		return AutoCastRemoved
 	}
-	return gs.AddSpellToAutoCast(spellID) // Returns true if added
+	if gs.AddSpellToAutoCast(spellID) {
+		return AutoCastAdded
+	}
+	return AutoCastSlotsFull
 }
 
 // ResetForPrestige resets appropriate data for prestige.

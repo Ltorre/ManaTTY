@@ -117,14 +117,28 @@ func (e *GameEngine) SetAutoCast(gs *models.GameState, enabled bool) {
 	gs.Session.AutoCastEnabled = enabled
 }
 
+// ErrNoAutoCastSlots is returned when all auto-cast slots are full.
+var ErrNoAutoCastSlots = errors.New("no auto-cast slots available")
+
 // ToggleSpellAutoCast adds or removes a spell from auto-cast slots.
-// Returns (isNowInSlot, error)
+// Returns (isNowInSlot, error). Error is non-nil if slots are full when trying to add.
 func (e *GameEngine) ToggleSpellAutoCast(gs *models.GameState, spellID string) (bool, error) {
 	// Verify spell exists
 	if gs.GetSpellByID(spellID) == nil {
 		return false, ErrSpellNotFound
 	}
-	return gs.ToggleSpellAutoCast(spellID), nil
+	
+	result := gs.ToggleSpellAutoCast(spellID)
+	switch result {
+	case models.AutoCastAdded:
+		return true, nil
+	case models.AutoCastRemoved:
+		return false, nil
+	case models.AutoCastSlotsFull:
+		return false, ErrNoAutoCastSlots
+	default:
+		return false, nil
+	}
 }
 
 // AddSpellToAutoCast adds a spell to an auto-cast slot.
