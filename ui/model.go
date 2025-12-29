@@ -13,12 +13,13 @@ import (
 type ViewType string
 
 const (
-	ViewTower    ViewType = "tower"
-	ViewSpells   ViewType = "spells"
-	ViewRituals  ViewType = "rituals"
-	ViewStats    ViewType = "stats"
-	ViewPrestige ViewType = "prestige"
-	ViewMenu     ViewType = "menu"
+	ViewTower      ViewType = "tower"
+	ViewSpells     ViewType = "spells"
+	ViewRituals    ViewType = "rituals"
+	ViewStats      ViewType = "stats"
+	ViewPrestige   ViewType = "prestige"
+	ViewMenu       ViewType = "menu"
+	ViewSpecialize ViewType = "specialize"
 )
 
 // Model is the main Bubble Tea model for the game.
@@ -62,6 +63,11 @@ type Model struct {
 
 	// Ritual builder state
 	ritualSpells []string
+
+	// Specialization popup state
+	specSpellID   string // Spell being specialized
+	specTier      int    // Which tier (1 or 2)
+	specChoiceIdx int    // 0 or 1 selection
 }
 
 // NewModel creates a new UI model.
