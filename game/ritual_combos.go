@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"sort"
 	"strings"
@@ -335,9 +336,9 @@ func GetEffectDisplayString(effect models.RitualEffect) string {
 }
 
 // GetRitualEffectIcon returns an icon for the effect type.
-// Uses ASCII fallbacks on Windows for compatibility.
+// Uses ASCII fallbacks on legacy Windows CMD for compatibility.
 func GetRitualEffectIcon(effectType models.RitualEffectType) string {
-	if isWindows() {
+	if !supportsEmoji() {
 		switch effectType {
 		case models.RitualEffectDamage:
 			return "[F]"
@@ -365,7 +366,20 @@ func GetRitualEffectIcon(effectType models.RitualEffectType) string {
 	}
 }
 
-// isWindows returns true if running on Windows.
-func isWindows() bool {
-	return runtime.GOOS == "windows"
+// supportsEmoji detects if the current terminal supports emoji display.
+func supportsEmoji() bool {
+	if runtime.GOOS != "windows" {
+		return true
+	}
+	// Windows Terminal, VS Code, ConEmu, etc. support emojis
+	if os.Getenv("WT_SESSION") != "" ||
+		os.Getenv("TERM_PROGRAM") == "vscode" ||
+		os.Getenv("ConEmuANSI") == "ON" ||
+		os.Getenv("ANSICON") != "" {
+		return true
+	}
+	if term := os.Getenv("TERM"); term != "" && term != "dumb" {
+		return true
+	}
+	return false
 }

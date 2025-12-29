@@ -183,7 +183,7 @@ func (m Model) viewTower() string {
 
 	// Stats section
 	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
-	lines = append(lines, SubtitleStyle.Render(sym.Stats + " STATS"))
+	lines = append(lines, SubtitleStyle.Render(sym.Stats+" STATS"))
 
 	if m.engine != nil {
 		manaPerSec := m.engine.CalculateManaPerSecond(gs)
@@ -230,7 +230,7 @@ func (m Model) viewTower() string {
 	// Active rituals
 	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
 	activeRituals := gs.GetActiveRituals()
-	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf(sym.Ritual + " ACTIVE RITUALS (%d/%d)",
+	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf(sym.Ritual+" ACTIVE RITUALS (%d/%d)",
 		len(activeRituals), gs.PrestigeData.RitualCapacity)))
 
 	if len(activeRituals) == 0 {
@@ -330,7 +330,7 @@ func (m Model) viewSpells() string {
 	if m.gameState.Session.AutoCastEnabled {
 		autoCastStatus = "ON"
 	}
-	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf(sym.AutoCast + " Auto-Cast Loadout [%s] (%d/%d slots)", autoCastStatus, usedSlots, maxSlots)))
+	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf(sym.AutoCast+" Auto-Cast Loadout [%s] (%d/%d slots)", autoCastStatus, usedSlots, maxSlots)))
 
 	idxBySpellID := map[string]int{}
 	for i, id := range slotSpellIDs {

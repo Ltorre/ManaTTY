@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 	"time"
 
@@ -22,13 +21,13 @@ import (
 )
 
 func main() {
-	// Use ASCII-friendly symbols on Windows
-	if runtime.GOOS == "windows" {
-		fmt.Println("# Mage Tower Ascension")
-		fmt.Println("-----------------------")
-	} else {
+	// Use ASCII-friendly symbols on legacy Windows CMD
+	if ui.SupportsEmoji() {
 		fmt.Println("🏰 Mage Tower Ascension")
 		fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━")
+	} else {
+		fmt.Println("# Mage Tower Ascension")
+		fmt.Println("-----------------------")
 	}
 
 	// Prompt for nickname
@@ -103,10 +102,10 @@ func main() {
 	if gameState.SavedAt.After(time.Time{}) {
 		offlineProgress := gameEngine.ApplyOfflineProgress(gameState)
 		if offlineProgress.TimeOffline > time.Minute {
-			if runtime.GOOS == "windows" {
-				fmt.Printf("\n* Offline Progress: %s\n", engine.FormatOfflineProgress(offlineProgress))
-			} else {
+			if ui.SupportsEmoji() {
 				fmt.Printf("\n📊 Offline Progress: %s\n", engine.FormatOfflineProgress(offlineProgress))
+			} else {
+				fmt.Printf("\n* Offline Progress: %s\n", engine.FormatOfflineProgress(offlineProgress))
 			}
 			if offlineProgress.ManaGenerated > 0 {
 				fmt.Printf("   Mana earned: %s\n", utils.FormatNumber(offlineProgress.ManaGenerated))
