@@ -26,6 +26,11 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		return ErrNeedsSpecialization
 	}
 
+	// Elemental Resonance is based on the equipped auto-cast loadout.
+	// (Applies to both manual and auto casts while the loadout is equipped.)
+	resCounts := gs.GetAutoCastElementCounts()
+	hasResonance := resCounts[spell.Element] >= game.ElementalResonanceMinSpells
+
 	// Check cooldown
 	if !spell.IsReady() {
 		return ErrSpellOnCooldown
@@ -40,6 +45,11 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 	// Apply Mana Efficiency specialization (-20% mana cost)
 	if spell.HasSpecialization(models.SpecManaEfficiency) {
 		manaCost *= (1.0 - game.SpecManaEfficiencyBonus)
+	}
+
+	// Thunder resonance: small mana-cost reduction for Thunder spells
+	if hasResonance && spell.Element == models.ElementThunder {
+		manaCost *= (1.0 - game.ResonanceThunderManaCostReduction)
 	}
 
 	// Apply synergy bonus if active and matching element
@@ -64,6 +74,11 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		cooldownReduction += game.SpecRapidCastBonus
 	}
 
+	// Ice resonance: small cooldown reduction for Ice spells
+	if hasResonance && spell.Element == models.ElementIce {
+		cooldownReduction += game.ResonanceIceCooldownReduction
+	}
+
 	// Apply synergy bonus to cooldown if active
 	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
 		cooldownReduction += game.ElementSynergyBonus // Additional 20% reduction
@@ -85,6 +100,11 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		damage *= (1.0 + game.SpecBurstDamageBonus)
 	}
 
+	// Fire resonance: small damage bonus for Fire spells
+	if hasResonance && spell.Element == models.ElementFire {
+		damage *= (1.0 + game.ResonanceFireDamageBonus)
+	}
+
 	// Apply Crit Chance specialization (15% chance for 2x damage)
 	if spell.HasSpecialization(models.SpecCritChance) {
 		if rand.Float64() < game.SpecCritChanceBonus {
@@ -96,7 +116,13 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
 		damage *= (1.0 + game.ElementSynergyBonus) // +20% damage during synergy
 	}
-	gs.Tower.AddSigilCharge(damage)
+
+	// Arcane resonance: small bonus to sigil charge for Arcane spells
+	sigilCharge := damage
+	if hasResonance && spell.Element == models.ElementArcane {
+		sigilCharge *= (1.0 + game.ResonanceArcaneSigilChargeBonus)
+	}
+	gs.Tower.AddSigilCharge(sigilCharge)
 
 	// Record for element synergy tracking
 	gs.RecordSpellCast(spell.Element)
