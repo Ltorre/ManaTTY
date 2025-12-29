@@ -8,7 +8,7 @@ You are a wizard climbing a magical tower! Cast spells to earn mana/experience a
 
 ## 📋 Project Status
 
-**Current Phase:** Game Integration Complete - Ready to Play!
+**Current Phase:** Rituals & Prestige System Complete
 
 ### Milestones
 
@@ -19,7 +19,7 @@ You are a wizard climbing a magical tower! Cast spells to earn mana/experience a
 - [x] **Milestone 5:** Game engine core
 - [x] **Milestone 6:** Bubble Tea UI foundation
 - [x] **Milestone 7:** Main integration & Tower/Spell views
-- [ ] **Milestone 8:** Rituals & Prestige system
+- [x] **Milestone 8:** Rituals & Prestige system
 - [ ] **Milestone 9:** Offline progress & polish
 
 ## 🛠️ Tech Stack
