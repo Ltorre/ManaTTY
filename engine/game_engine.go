@@ -84,7 +84,7 @@ func (e *GameEngine) CalculateManaPerSecond(gs *models.GameState) float64 {
 	)
 
 	// Floor-event temporary bonus
-	if gs.HasActiveFloorEventBuff(gs.Tower.CurrentFloor) && gs.Session.ActiveFloorBuff.Choice == models.FloorEventChoiceManaGen {
+	if gs.GetActiveFloorBuffChoice(gs.Tower.CurrentFloor) == models.FloorEventChoiceManaGen {
 		manaPerSec *= (1.0 + game.FloorEventManaGenBonus)
 	}
 

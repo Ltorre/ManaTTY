@@ -27,9 +27,9 @@ type FloorEventState struct {
 
 // FloorEventBuff is a temporary bonus earned from a floor event.
 type FloorEventBuff struct {
-	Choice        FloorEventChoice `bson:"choice" json:"choice"`
-	StartedAtFloor int            `bson:"started_at_floor" json:"started_at_floor"`
-	ExpiresAtFloor int            `bson:"expires_at_floor" json:"expires_at_floor"`
+	Choice         FloorEventChoice `bson:"choice" json:"choice"`
+	StartedAtFloor int              `bson:"started_at_floor" json:"started_at_floor"`
+	ExpiresAtFloor int              `bson:"expires_at_floor" json:"expires_at_floor"`
 }
 
 func (gs *GameState) HasActiveFloorEvent(nowMs int64) bool {
@@ -77,6 +77,16 @@ func (gs *GameState) HasActiveFloorEventBuff(currentFloor int) bool {
 		return false
 	}
 	return currentFloor < gs.Session.ActiveFloorBuff.ExpiresAtFloor
+}
+
+// GetActiveFloorBuffChoice returns the active floor-buff choice, or "" if none is active.
+// This mirrors the pattern used by GetActiveSynergy().
+func (gs *GameState) GetActiveFloorBuffChoice(currentFloor int) FloorEventChoice {
+	if !gs.HasActiveFloorEventBuff(currentFloor) {
+		return ""
+	}
+	// HasActiveFloorEventBuff ensures Session and ActiveFloorBuff are non-nil.
+	return gs.Session.ActiveFloorBuff.Choice
 }
 
 func (gs *GameState) MaybeExpireFloorEventBuff(currentFloor int) bool {
