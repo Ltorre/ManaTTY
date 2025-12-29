@@ -22,7 +22,7 @@ func NewTowerState() *TowerState {
 		MaxMana:            100,
 		LifetimeManaEarned: 0,
 		SigilCharge:        0,
-		SigilRequired:      200, // Will be recalculated based on floor
+		SigilRequired:      0, // Calculated by engine on first tick
 	}
 }
 
