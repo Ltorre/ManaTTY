@@ -23,6 +23,37 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 - [x] **Milestone 7:** Main integration & Tower/Spell views
 - [x] **Milestone 8:** Rituals & Prestige system
 - [x] **Milestone 9:** Offline progress & polish
+- [x] **Milestone 10:** Buildcrafting & QoL improvements
+  - Spell leveling (max 10) with damage/cooldown/cost scaling
+  - Auto-cast slot priority reordering
+  - Element synergy system (3 same-element casts = 20% buff)
+  - Aggregated mana hints in loadout panel
+  - Mana display in spells view
+  - Nickname prompt for multiple save files
+- [x] **Milestone 11:** Ascension Sigil system
+  - Damage-based gate for floor climbing (mana + sigil required)
+  - Spell damage stats visible in UI
+  - Balanced scaling for mid/late game challenge
+- [x] **Milestone 12:** Spell Specialization & Auto-Cast Rules
+  - Tier 1 specializations at level 5: Crit Chance (+15% for 2x dmg) or Mana Efficiency (-20% cost)
+  - Tier 2 specializations at level 10: Burst Damage (+30% dmg) or Rapid Cast (-25% CD)
+  - Auto-cast conditional rules: Always, Mana>50%, Mana>75%, Sigil not full, Synergy active
+  - Press `X` to specialize, `C` to cycle conditions
+
+### Future Roadmap
+
+- [ ] **Elemental Resonance Loadout Bonus**
+  - Reward themed loadouts: 2+ spells of the same element in auto-cast grants a passive perk while equipped
+  - Encourages buildcrafting decisions and element-focused strategies
+
+- [ ] **Ritual Depth: Tiers & Evolution**
+  - Casting the same ritual combo repeatedly "masters" it
+  - Mastered rituals grant minor permanent effects or reduced cooldowns
+  - Adds long-term goals without new UI complexity
+
+- [ ] **Floor Events (Lightweight)**
+  - Every N floors, a single choice appears: "+mana gen for 10 floors" vs "+sigil charge rate" vs "+cooldown reduction"
+  - One-screen decision with big replay value
 
 ## 🛠️ Tech Stack
 
@@ -91,7 +122,9 @@ DEBUG=false
 - **Floor Climbing:** Spend mana to ascend to higher floors (cost scales exponentially)
 - **Spells:** Unlock and cast 12 unique spells across 4 elements (Fire, Ice, Thunder, Arcane)
 - **Spell Leveling:** Spend mana to upgrade spells (max level 10) for reduced cooldown, lower mana cost, and increased damage
+- **Spell Specialization:** At levels 5 and 10, choose a specialization path (Crit, Mana Efficiency, Burst Damage, or Rapid Cast)
 - **Auto-Cast Slots:** Assign spells to limited auto-cast slots (base 2, up to 4 with prestige)
+- **Auto-Cast Conditions:** Set rules per slot: Always, Mana>50%, Mana>75%, Sigil not full, or Synergy active
 - **Slot Priority:** Reorder auto-cast slots to control which spells cast first
 - **Element Synergies:** Cast 3 spells of the same element in a row for a 10-second buff (20% reduced cost, cooldown & +20% damage)
 - **Mana Economy:** All spells (auto and manual) consume mana—choose your auto-cast loadout wisely!
@@ -112,6 +145,8 @@ DEBUG=false
 | `A` | Toggle Auto-cast on/off |
 | `Space` | Toggle spell in auto-cast slot (Spells view) |
 | `U` | Upgrade selected spell (Spells view) |
+| `X` | Open specialization menu (Spells view, level 5/10) |
+| `C` | Cycle auto-cast condition (Spells view) |
 | `<` / `>` | Reorder auto-cast slot priority (Spells view) |
 | `↑/↓` | Navigate lists |
 | `Enter` | Select/Cast spell manually |
