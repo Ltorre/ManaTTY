@@ -39,21 +39,32 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
   - Tier 2 specializations at level 10: Burst Damage (+30% dmg) or Rapid Cast (-25% CD)
   - Auto-cast conditional rules: Always, Mana>50%, Mana>75%, Sigil not full, Synergy active
   - Press `X` to specialize, `C` to cycle conditions
+- [x] **Milestone 13 (v1.1.0):** Elemental Resonance Loadout Bonus
+  - 2+ spells of the same element in auto-cast grants a passive perk while equipped
+  - Encourages themed loadouts and element-focused buildcrafting
 
 ### Future Roadmap
 
-- [ ] **Elemental Resonance Loadout Bonus**
-  - Reward themed loadouts: 2+ spells of the same element in auto-cast grants a passive perk while equipped
-  - Encourages buildcrafting decisions and element-focused strategies
-
-- [ ] **Ritual Depth: Tiers & Evolution**
+- [ ] **(Maybe) - Ritual Depth: Tiers & Evolution**
   - Casting the same ritual combo repeatedly "masters" it
   - Mastered rituals grant minor permanent effects or reduced cooldowns
   - Adds long-term goals without new UI complexity
 
-- [ ] **Floor Events (Lightweight)**
+- [ ] **(Maybe) - Floor Events (Lightweight)**
   - Every N floors, a single choice appears: "+mana gen for 10 floors" vs "+sigil charge rate" vs "+cooldown reduction"
   - One-screen decision with big replay value
+
+- [ ] **(Maybe) - Loadout Perks (Tiny Set Bonuses)**
+  - Simple 2-piece / 3-piece bonuses across elements (e.g., Fire+Thunder = +sigil rate)
+  - Always-on while equipped; no extra clicks
+
+- [ ] **(Maybe) - Ritual Presets / Favorites**
+  - Mark a ritual as a favorite and quickly re-create it after prestige
+  - Keeps the loop fast without adding new gameplay burden
+
+- [ ] **(Maybe) - Auto-Cast “Focus Mode”**
+  - Optional toggle: prefer casting spells matching active synergy (when possible)
+  - Reduces micro-management while encouraging cohesive builds
 
 ## 🛠️ Tech Stack
 

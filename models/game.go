@@ -203,6 +203,40 @@ func (gs *GameState) IsSpellInAutoCast(spellID string) bool {
 	return false
 }
 
+// GetAutoCastSpellIDs returns the active auto-cast spell IDs.
+// Prefers the new config system when initialized (non-nil), otherwise falls back to legacy slots.
+func (gs *GameState) GetAutoCastSpellIDs() []string {
+	if gs.Session.AutoCastConfigs != nil {
+		if len(gs.Session.AutoCastConfigs) > 0 {
+			ids := make([]string, 0, len(gs.Session.AutoCastConfigs))
+			for _, cfg := range gs.Session.AutoCastConfigs {
+				ids = append(ids, cfg.SpellID)
+			}
+			return ids
+		}
+		// If configs are initialized but empty while legacy slots exist, prefer legacy.
+		// (This can happen with older saves that predate AutoCastConfigs.)
+		if len(gs.Session.AutoCastSlots) > 0 {
+			return gs.Session.AutoCastSlots
+		}
+		return []string{}
+	}
+	return gs.Session.AutoCastSlots
+}
+
+// GetAutoCastElementCounts returns how many auto-cast spells of each element are currently equipped.
+func (gs *GameState) GetAutoCastElementCounts() map[Element]int {
+	counts := map[Element]int{}
+	for _, spellID := range gs.GetAutoCastSpellIDs() {
+		spell := gs.GetSpellByID(spellID)
+		if spell == nil {
+			continue
+		}
+		counts[spell.Element]++
+	}
+	return counts
+}
+
 // GetAutoCastSlotCount returns max auto-cast slots (base 2 + prestige bonuses).
 func (gs *GameState) GetAutoCastSlotCount() int {
 	base := 2

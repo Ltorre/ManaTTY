@@ -53,6 +53,15 @@ const (
 	ElementSynergyDuration = 10.0 // Seconds the synergy buff lasts
 	ElementSynergyBonus    = 0.20 // +20% bonus during synergy
 
+	// Elemental Resonance (passive bonuses from themed auto-cast loadouts)
+	// If you equip at least ElementalResonanceMinSpells auto-cast spells of the same element,
+	// you gain a small passive perk while that loadout is equipped.
+	ElementalResonanceMinSpells       = 2
+	ResonanceFireDamageBonus          = 0.05 // +5% damage (Fire spells)
+	ResonanceIceCooldownReduction     = 0.05 // -5% cooldown (Ice spells)
+	ResonanceThunderManaCostReduction = 0.05 // -5% mana cost (Thunder spells)
+	ResonanceArcaneSigilChargeBonus   = 0.05 // +5% sigil charge (Arcane spells)
+
 	// Ascension Sigil - damage requirement to climb floors
 	SigilBaseDamage    = 200.0 // Base damage used in sigil requirement formula (floor 1 baseline)
 	SigilScaleExponent = 1.6   // Scaling per floor (tuned to stay relevant vs mana costs)
