@@ -60,6 +60,14 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 	spell.CooldownRemainingMs = game.CalculateSpellCooldown(baseCooldown, cooldownReduction)
 	spell.CastCount++
 
+	// Calculate and apply damage to Ascension Sigil
+	damage := spell.GetEffectiveDamage(game.SpellDamagePerLevel)
+	// Apply synergy bonus to damage if active
+	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
+		damage *= (1.0 + game.ElementSynergyBonus) // +20% damage during synergy
+	}
+	gs.Tower.AddSigilCharge(damage)
+
 	// Record for element synergy tracking
 	gs.RecordSpellCast(spell.Element)
 
