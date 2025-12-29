@@ -205,6 +205,12 @@ func (m Model) viewSpells() string {
 		TitleStyle.Render("📜 SPELLS"),
 	)
 	lines = append(lines, header)
+
+	// Current mana display
+	manaStr := fmt.Sprintf("💎 Mana: %s / %s",
+		utils.FormatNumber(m.gameState.Tower.CurrentMana),
+		utils.FormatNumber(m.gameState.Tower.MaxMana))
+	lines = append(lines, HighlightStyle.Render(manaStr))
 	lines = append(lines, "")
 
 	// Element Synergy Status
@@ -285,13 +291,14 @@ func (m Model) viewSpells() string {
 		// Show details for selected spell
 		if selected && m.engine != nil {
 			stats := m.engine.GetSpellEffectiveStats(m.gameState, spell)
-			upgradeStr := fmt.Sprintf("Upgrade: %.0f mana", stats.UpgradeCost)
+			upgradeStr := fmt.Sprintf("Upgrade: %s mana", utils.FormatNumber(stats.UpgradeCost))
 			if !stats.CanUpgrade {
 				upgradeStr = "MAX LEVEL"
 			}
 			details := DimStyle.Render(fmt.Sprintf(
-				"      %s | CD: %s | Cost: %.0f | %s",
+				"      %s | DMG: %.0f | CD: %s | Cost: %.0f | %s",
 				spell.Element,
+				stats.Damage,
 				utils.FormatMilliseconds(stats.CooldownMs),
 				stats.ManaCost,
 				upgradeStr,
