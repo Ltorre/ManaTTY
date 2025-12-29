@@ -3,21 +3,35 @@ package storage
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/Ltorre/ManaTTY/models"
+	"github.com/google/uuid"
 )
 
 // JSONSaveStore implements SaveStore using local JSON files.
 // Saves are stored in ~/.manatty/saves/<player_uuid>/<slot>.json
+// Note: Context cancellation is not supported for file-based storage operations.
 type JSONSaveStore struct {
 	baseDir string
 	mu      sync.RWMutex
+}
+
+// ErrInvalidUUID is returned when a UUID fails validation.
+var ErrInvalidUUID = fmt.Errorf("invalid UUID format")
+
+// validateUUID checks if the given string is a valid UUID to prevent path traversal.
+func validateUUID(id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return ErrInvalidUUID
+	}
+	return nil
 }
 
 // NewJSONSaveStore creates a new JSON-based save store.
@@ -36,46 +50,41 @@ func NewJSONSaveStore() (*JSONSaveStore, error) {
 }
 
 // playerDir returns the directory for a player's saves.
-func (s *JSONSaveStore) playerDir(playerUUID string) string {
-	return filepath.Join(s.baseDir, playerUUID)
+// Returns an error if the UUID is invalid (prevents path traversal).
+func (s *JSONSaveStore) playerDir(playerUUID string) (string, error) {
+	if err := validateUUID(playerUUID); err != nil {
+		return "", err
+	}
+	return filepath.Clean(filepath.Join(s.baseDir, playerUUID)), nil
 }
 
 // savePath returns the file path for a specific save slot.
-func (s *JSONSaveStore) savePath(playerUUID string, slot int) string {
-	return filepath.Join(s.playerDir(playerUUID), slotFilename(slot))
+func (s *JSONSaveStore) savePath(playerUUID string, slot int) (string, error) {
+	dir, err := s.playerDir(playerUUID)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, slotFilename(slot)), nil
 }
 
 func slotFilename(slot int) string {
-	return "slot_" + itoa(slot) + ".json"
-}
-
-// Simple int to string without importing strconv
-func itoa(i int) string {
-	if i == 0 {
-		return "0"
-	}
-	result := ""
-	negative := i < 0
-	if negative {
-		i = -i
-	}
-	for i > 0 {
-		result = string(rune('0'+i%10)) + result
-		i /= 10
-	}
-	if negative {
-		result = "-" + result
-	}
-	return result
+	return "slot_" + strconv.Itoa(slot) + ".json"
 }
 
 // Save upserts a game save to a JSON file.
 func (s *JSONSaveStore) Save(ctx context.Context, save *models.GameState) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	// Ensure player directory exists
-	playerDir := s.playerDir(save.PlayerUUID)
+	playerDir, err := s.playerDir(save.PlayerUUID)
+	if err != nil {
+		return err
+	}
 	if err := os.MkdirAll(playerDir, 0755); err != nil {
 		return err
 	}
@@ -88,16 +97,26 @@ func (s *JSONSaveStore) Save(ctx context.Context, save *models.GameState) error 
 		return err
 	}
 
-	savePath := s.savePath(save.PlayerUUID, save.Slot)
+	savePath, err := s.savePath(save.PlayerUUID, save.Slot)
+	if err != nil {
+		return err
+	}
 	return os.WriteFile(savePath, data, 0644)
 }
 
 // Load retrieves a game save from a JSON file.
 func (s *JSONSaveStore) Load(ctx context.Context, playerUUID string, slot int) (*models.GameState, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	savePath := s.savePath(playerUUID, slot)
+	savePath, err := s.savePath(playerUUID, slot)
+	if err != nil {
+		return nil, err
+	}
 	data, err := os.ReadFile(savePath)
 	if os.IsNotExist(err) {
 		return nil, ErrSaveNotFound
@@ -134,10 +153,17 @@ func (s *JSONSaveStore) LoadLatest(ctx context.Context, playerUUID string) (*mod
 
 // ListSaves returns all saves for a player.
 func (s *JSONSaveStore) ListSaves(ctx context.Context, playerUUID string) ([]*models.GameState, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	playerDir := s.playerDir(playerUUID)
+	playerDir, err := s.playerDir(playerUUID)
+	if err != nil {
+		return nil, err
+	}
 	entries, err := os.ReadDir(playerDir)
 	if os.IsNotExist(err) {
 		return []*models.GameState{}, nil
@@ -175,11 +201,18 @@ func (s *JSONSaveStore) ListSaves(ctx context.Context, playerUUID string) ([]*mo
 
 // Delete removes a specific game save.
 func (s *JSONSaveStore) Delete(ctx context.Context, playerUUID string, slot int) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	savePath := s.savePath(playerUUID, slot)
-	err := os.Remove(savePath)
+	savePath, err := s.savePath(playerUUID, slot)
+	if err != nil {
+		return err
+	}
+	err = os.Remove(savePath)
 	if os.IsNotExist(err) {
 		return nil // Already deleted
 	}
@@ -188,11 +221,18 @@ func (s *JSONSaveStore) Delete(ctx context.Context, playerUUID string, slot int)
 
 // DeleteAllForPlayer removes all saves for a player.
 func (s *JSONSaveStore) DeleteAllForPlayer(ctx context.Context, playerUUID string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	playerDir := s.playerDir(playerUUID)
-	err := os.RemoveAll(playerDir)
+	playerDir, err := s.playerDir(playerUUID)
+	if err != nil {
+		return err
+	}
+	err = os.RemoveAll(playerDir)
 	if os.IsNotExist(err) {
 		return nil
 	}
@@ -201,11 +241,18 @@ func (s *JSONSaveStore) DeleteAllForPlayer(ctx context.Context, playerUUID strin
 
 // Exists checks if a save exists for a player and slot.
 func (s *JSONSaveStore) Exists(ctx context.Context, playerUUID string, slot int) (bool, error) {
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	savePath := s.savePath(playerUUID, slot)
-	_, err := os.Stat(savePath)
+	savePath, err := s.savePath(playerUUID, slot)
+	if err != nil {
+		return false, err
+	}
+	_, err = os.Stat(savePath)
 	if os.IsNotExist(err) {
 		return false, nil
 	}
@@ -234,6 +281,7 @@ func (s *JSONSaveStore) GetLastSavedTime(ctx context.Context, playerUUID string,
 }
 
 // JSONPlayerStore implements PlayerStore using local JSON files.
+// Note: Context cancellation is not supported for file-based storage operations.
 type JSONPlayerStore struct {
 	baseDir string
 	mu      sync.RWMutex
@@ -254,12 +302,19 @@ func NewJSONPlayerStore() (*JSONPlayerStore, error) {
 	return &JSONPlayerStore{baseDir: baseDir}, nil
 }
 
-func (s *JSONPlayerStore) playerPath(uuid string) string {
-	return filepath.Join(s.baseDir, uuid+".json")
+func (s *JSONPlayerStore) playerPath(id string) (string, error) {
+	if err := validateUUID(id); err != nil {
+		return "", err
+	}
+	return filepath.Clean(filepath.Join(s.baseDir, id+".json")), nil
 }
 
 // Create creates a new player.
 func (s *JSONPlayerStore) Create(ctx context.Context, player *models.Player) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -268,17 +323,29 @@ func (s *JSONPlayerStore) Create(ctx context.Context, player *models.Player) err
 		return err
 	}
 
-	return os.WriteFile(s.playerPath(player.UUID), data, 0644)
+	path, err := s.playerPath(player.UUID)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
 }
 
 // GetByUUID retrieves a player by UUID.
-func (s *JSONPlayerStore) GetByUUID(ctx context.Context, uuid string) (*models.Player, error) {
+func (s *JSONPlayerStore) GetByUUID(ctx context.Context, id string) (*models.Player, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	data, err := os.ReadFile(s.playerPath(uuid))
+	path, err := s.playerPath(id)
+	if err != nil {
+		return nil, err
+	}
+	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
-		return nil, errors.New("player not found")
+		return nil, ErrPlayerNotFound
 	}
 	if err != nil {
 		return nil, err
@@ -294,6 +361,10 @@ func (s *JSONPlayerStore) GetByUUID(ctx context.Context, uuid string) (*models.P
 
 // GetByUsername retrieves a player by username.
 func (s *JSONPlayerStore) GetByUsername(ctx context.Context, username string) (*models.Player, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -322,7 +393,7 @@ func (s *JSONPlayerStore) GetByUsername(ctx context.Context, username string) (*
 		}
 	}
 
-	return nil, errors.New("player not found")
+	return nil, ErrPlayerNotFound
 }
 
 // Update updates an existing player.
@@ -331,11 +402,19 @@ func (s *JSONPlayerStore) Update(ctx context.Context, player *models.Player) err
 }
 
 // Delete removes a player.
-func (s *JSONPlayerStore) Delete(ctx context.Context, uuid string) error {
+func (s *JSONPlayerStore) Delete(ctx context.Context, id string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	err := os.Remove(s.playerPath(uuid))
+	path, err := s.playerPath(id)
+	if err != nil {
+		return err
+	}
+	err = os.Remove(path)
 	if os.IsNotExist(err) {
 		return nil
 	}
