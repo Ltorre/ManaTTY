@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Ltorre/ManaTTY/game"
 	"github.com/Ltorre/ManaTTY/models"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -96,8 +97,76 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleMenuKeys(msg)
 	case ViewSpecialize:
 		return m.handleSpecializeKeys(msg)
+	case ViewFloorEvent:
+		return m.handleFloorEventKeys(msg)
 	}
 
+	return m, nil
+}
+
+func (m Model) handleFloorEventKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// If the event has already expired, exit the view.
+	if m.gameState == nil || m.gameState.Session == nil || m.gameState.Session.ActiveFloorEvent == nil {
+		m.GoBack()
+		return m, nil
+	}
+
+	switch msg.String() {
+	case "up", "k":
+		if m.selectedIndex > 0 {
+			m.selectedIndex--
+		}
+	case "down", "j":
+		if m.selectedIndex < 2 {
+			m.selectedIndex++
+		}
+	case "1":
+		m.selectedIndex = 0
+		return m.handleFloorEventChoice()
+	case "2":
+		m.selectedIndex = 1
+		return m.handleFloorEventChoice()
+	case "3":
+		m.selectedIndex = 2
+		return m.handleFloorEventChoice()
+	case "enter", " ":
+		return m.handleFloorEventChoice()
+	case "esc", "b":
+		// Explicitly ignore the event (no bonus)
+		m.gameState.ClearFloorEvent()
+		m.GoBack()
+		m.ShowNotification("Floor event ignored")
+	}
+
+	return m, nil
+}
+
+func (m Model) handleFloorEventChoice() (tea.Model, tea.Cmd) {
+	if m.gameState == nil || m.gameState.Session == nil || m.gameState.Session.ActiveFloorEvent == nil {
+		m.GoBack()
+		return m, nil
+	}
+
+	var choice models.FloorEventChoice
+	switch m.selectedIndex {
+	case 0:
+		choice = models.FloorEventChoiceManaGen
+	case 1:
+		choice = models.FloorEventChoiceSigilChargeRate
+	case 2:
+		choice = models.FloorEventChoiceCooldownReduction
+	default:
+		choice = models.FloorEventChoiceManaGen
+	}
+
+	currentFloor := 0
+	if m.gameState.Tower != nil {
+		currentFloor = m.gameState.Tower.CurrentFloor
+	}
+
+	m.gameState.ApplyFloorEventChoice(choice, currentFloor, game.FloorEventBuffDurationFloors)
+	m.GoBack()
+	m.ShowNotification("Floor event chosen: " + models.FloorEventChoiceDisplayNames[choice])
 	return m, nil
 }
 
@@ -427,6 +496,17 @@ func (m Model) handleTick(msg TickMsg) (tea.Model, tea.Cmd) {
 
 	// Update game state
 	m.engine.Tick(m.gameState, elapsed)
+
+	// Floor events: auto-open when available (but don't interrupt confirmations/specializations)
+	if m.gameState != nil && m.gameState.Session != nil {
+		if m.gameState.Session.ActiveFloorEvent != nil && m.currentView != ViewFloorEvent && !m.confirming && m.currentView != ViewSpecialize {
+			m.Navigate(ViewFloorEvent)
+		}
+		// If we're showing the event view and it expired/was cleared, return to the previous view.
+		if m.currentView == ViewFloorEvent && m.gameState.Session.ActiveFloorEvent == nil {
+			m.GoBack()
+		}
+	}
 
 	// Check for aggregated skip notifications (every 2 seconds)
 	if time.Since(m.lastSkipCheckAt) > 2*time.Second {
