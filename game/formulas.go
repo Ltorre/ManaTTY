@@ -102,12 +102,20 @@ func CalculateManualCastCost(baseManaCost float64) float64 {
 }
 
 // CalculateSpellUpgradeCost returns the mana cost to upgrade a spell to the next level.
+// The cost scales exponentially with level and linearly with the spell's base mana cost.
+// Scaling factor (baseCost/50.0) normalizes costs so spells with higher base costs
+// are proportionally more expensive to upgrade.
+// Example: At level 10 with baseCost=50, cost ≈ 15,811 mana.
 func CalculateSpellUpgradeCost(currentLevel int, baseCost float64) float64 {
 	return SpellUpgradeBaseCost * math.Pow(float64(currentLevel), SpellUpgradeCostExponent) * (baseCost / 50.0)
 }
 
 // CalculateSpellEffectiveManaCost returns mana cost after level reduction.
+// Level must be >= 1. Each level above 1 reduces cost by SpellManaCostPerLevel (8%).
 func CalculateSpellEffectiveManaCost(baseCost float64, level int) float64 {
+	if level < 1 {
+		level = 1
+	}
 	reduction := SpellManaCostPerLevel * float64(level-1)
 	cost := baseCost * (1.0 - reduction)
 	if cost < 1 {
@@ -117,7 +125,11 @@ func CalculateSpellEffectiveManaCost(baseCost float64, level int) float64 {
 }
 
 // CalculateSpellEffectiveCooldown returns cooldown after level reduction.
+// Level must be >= 1. Each level above 1 reduces cooldown by SpellCooldownPerLevel (5%).
 func CalculateSpellEffectiveCooldown(baseCooldownMs int64, level int) int64 {
+	if level < 1 {
+		level = 1
+	}
 	reduction := SpellCooldownPerLevel * float64(level-1)
 	cooldown := float64(baseCooldownMs) * (1.0 - reduction)
 	if cooldown < float64(MinSpellCooldownMs) {

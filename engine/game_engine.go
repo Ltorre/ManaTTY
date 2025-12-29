@@ -151,6 +151,8 @@ func (e *GameEngine) UpdateRitualCooldowns(gs *models.GameState, elapsedMs int64
 // ProcessAutoCasts automatically casts spells in auto-cast slots if mana is available.
 // Only spells assigned to auto-cast slots will be cast automatically.
 // Returns the number of spells skipped due to insufficient mana.
+// Note: The return value is primarily for internal tracking; use GetAndResetSkipCount
+// to retrieve the accumulated skip count for UI notifications.
 func (e *GameEngine) ProcessAutoCasts(gs *models.GameState) int {
 	skipped := 0
 	for _, spellID := range gs.Session.AutoCastSlots {

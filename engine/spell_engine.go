@@ -52,6 +52,11 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		cooldownReduction += game.ElementSynergyBonus // Additional 20% reduction
 	}
 
+	// Cap cooldown reduction to max allowed
+	if cooldownReduction > game.MaxCooldownReduction {
+		cooldownReduction = game.MaxCooldownReduction
+	}
+
 	spell.CooldownRemainingMs = game.CalculateSpellCooldown(baseCooldown, cooldownReduction)
 	spell.CastCount++
 
@@ -236,7 +241,7 @@ func (e *GameEngine) UpgradeSpell(gs *models.GameState, spell *models.Spell) err
 	}
 
 	gs.Tower.SpendMana(cost)
-	spell.LevelUp()
+	spell.LevelUp(game.SpellMaxLevel)
 
 	if e.OnSpellUpgraded != nil {
 		e.OnSpellUpgraded(spell)
