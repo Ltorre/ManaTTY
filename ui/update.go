@@ -317,7 +317,7 @@ func (m Model) handleRitualsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Clear ritual builder
 		m.ritualSpells = []string{}
 		m.ShowNotification("Selection cleared")
-	case "x":
+	case "x", "X":
 		// Reset all rituals (free up ritual slots)
 		if m.gameState != nil && len(m.gameState.Rituals) > 0 {
 			m.StartConfirmAction("Reset ALL rituals for this save? (y/n)", "reset_rituals")
