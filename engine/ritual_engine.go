@@ -165,12 +165,27 @@ func (e *GameEngine) GetSpellsAvailableForRitual(gs *models.GameState, excludeID
 
 // v1.2.0: Ritual Combo Effect Aggregation
 
+// getRitualEffects returns ritual effects, computing dynamically for legacy rituals.
+func getRitualEffects(ritual *models.Ritual) []models.RitualEffect {
+	// If effects are already computed, use them
+	if len(ritual.Effects) > 0 {
+		return ritual.Effects
+	}
+	// For legacy rituals, compute dynamically
+	comboInfo := game.ComputeRitualCombo(ritual.SpellIDs)
+	return comboInfo.Effects
+}
+
 // GetTotalRitualDamageBonus returns combined damage bonus from all active rituals.
 func (e *GameEngine) GetTotalRitualDamageBonus(gs *models.GameState) float64 {
 	total := 0.0
 	for _, ritual := range gs.Rituals {
 		if ritual.IsActive {
-			total += ritual.GetTotalDamageBonus()
+			for _, effect := range getRitualEffects(ritual) {
+				if effect.Type == models.RitualEffectDamage {
+					total += effect.Magnitude
+				}
+			}
 		}
 	}
 	return total
@@ -181,7 +196,11 @@ func (e *GameEngine) GetTotalRitualCooldownReduction(gs *models.GameState) float
 	total := 0.0
 	for _, ritual := range gs.Rituals {
 		if ritual.IsActive {
-			total += ritual.GetTotalCooldownReduction()
+			for _, effect := range getRitualEffects(ritual) {
+				if effect.Type == models.RitualEffectCooldown {
+					total += effect.Magnitude
+				}
+			}
 		}
 	}
 	return total
@@ -192,7 +211,11 @@ func (e *GameEngine) GetTotalRitualManaCostReduction(gs *models.GameState) float
 	total := 0.0
 	for _, ritual := range gs.Rituals {
 		if ritual.IsActive {
-			total += ritual.GetTotalManaCostReduction()
+			for _, effect := range getRitualEffects(ritual) {
+				if effect.Type == models.RitualEffectManaCost {
+					total += effect.Magnitude
+				}
+			}
 		}
 	}
 	return total
@@ -203,7 +226,11 @@ func (e *GameEngine) GetTotalRitualSigilChargeBonus(gs *models.GameState) float6
 	total := 0.0
 	for _, ritual := range gs.Rituals {
 		if ritual.IsActive {
-			total += ritual.GetTotalSigilChargeBonus()
+			for _, effect := range getRitualEffects(ritual) {
+				if effect.Type == models.RitualEffectSigilRate {
+					total += effect.Magnitude
+				}
+			}
 		}
 	}
 	return total

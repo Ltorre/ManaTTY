@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -313,19 +314,19 @@ func GetEffectDisplayString(effect models.RitualEffect) string {
 	suffix := ""
 	switch effect.Type {
 	case models.RitualEffectDamage:
-		suffix = " damage"
+		suffix = " dmg"
 	case models.RitualEffectCooldown:
 		sign = "-"
-		suffix = " cooldown"
+		suffix = " CD"
 	case models.RitualEffectManaCost:
 		sign = "-"
-		suffix = " mana cost"
+		suffix = " cost"
 	case models.RitualEffectSigilRate:
-		suffix = " sigil charge"
+		suffix = " sigil"
 	}
 
 	percent := int(effect.Magnitude * 100)
-	return sign + string(rune('0'+percent/10)) + string(rune('0'+percent%10)) + "%" + suffix
+	return fmt.Sprintf("%s%d%%%s", sign, percent, suffix)
 }
 
 // GetRitualEffectIcon returns an emoji icon for the effect type.

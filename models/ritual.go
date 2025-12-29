@@ -4,10 +4,10 @@ package models
 type RitualEffectType string
 
 const (
-	RitualEffectDamage     RitualEffectType = "damage"      // Fire signature: +X% spell damage
-	RitualEffectCooldown   RitualEffectType = "cooldown"    // Ice signature: -X% spell cooldown
-	RitualEffectManaCost   RitualEffectType = "mana_cost"   // Thunder signature: -X% mana cost
-	RitualEffectSigilRate  RitualEffectType = "sigil_rate"  // Arcane signature: +X% sigil charge rate
+	RitualEffectDamage    RitualEffectType = "damage"     // Fire signature: +X% spell damage
+	RitualEffectCooldown  RitualEffectType = "cooldown"   // Ice signature: -X% spell cooldown
+	RitualEffectManaCost  RitualEffectType = "mana_cost"  // Thunder signature: -X% mana cost
+	RitualEffectSigilRate RitualEffectType = "sigil_rate" // Arcane signature: +X% sigil charge rate
 )
 
 // RitualComposition indicates the element distribution in a ritual.
@@ -37,11 +37,11 @@ type Ritual struct {
 	CastCount         int      `bson:"cast_count" json:"cast_count"`
 
 	// v1.2.0: Ritual combo effects
-	Composition    RitualComposition `bson:"composition" json:"composition"`
-	Effects        []RitualEffect    `bson:"effects" json:"effects"`
-	HasSpellEcho   bool              `bson:"has_spell_echo" json:"has_spell_echo"`     // +5% kicker
-	SignatureName  string            `bson:"signature_name" json:"signature_name"`     // Special flavor name (if any)
-	DominantElement Element          `bson:"dominant_element" json:"dominant_element"` // For hybrid/pure
+	Composition     RitualComposition `bson:"composition" json:"composition"`
+	Effects         []RitualEffect    `bson:"effects" json:"effects"`
+	HasSpellEcho    bool              `bson:"has_spell_echo" json:"has_spell_echo"`     // +5% kicker
+	SignatureName   string            `bson:"signature_name" json:"signature_name"`     // Special flavor name (if any)
+	DominantElement Element           `bson:"dominant_element" json:"dominant_element"` // For hybrid/pure
 }
 
 // RitualBonus is the mana generation multiplier per active ritual.
