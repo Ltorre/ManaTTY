@@ -30,10 +30,9 @@ type Model struct {
 	player    *models.Player
 	engine    *engine.GameEngine
 
-	// Storage (optional, can be nil for offline play)
-	db         *storage.Database
-	playerRepo *storage.PlayerRepository
-	saveRepo   *storage.SaveRepository
+	// Storage (supports both MongoDB and local JSON)
+	db        *storage.Database // Keep for backward compatibility (may be nil)
+	saveStore storage.SaveStore
 
 	// UI state
 	currentView  ViewType
@@ -100,13 +99,14 @@ func (m *Model) SetEngine(e *engine.GameEngine) {
 	m.engine = e
 }
 
-// SetDatabase sets the database connections.
+// SetSaveStore sets the save store (interface supports both MongoDB and local JSON).
+func (m *Model) SetSaveStore(s storage.SaveStore) {
+	m.saveStore = s
+}
+
+// SetDatabase sets the database connection (for backward compatibility, may be nil).
 func (m *Model) SetDatabase(db *storage.Database) {
 	m.db = db
-	if db != nil {
-		m.playerRepo = storage.NewPlayerRepository(db)
-		m.saveRepo = storage.NewSaveRepository(db)
-	}
 }
 
 // Init initializes the model and returns initial commands.

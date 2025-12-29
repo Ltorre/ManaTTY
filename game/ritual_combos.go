@@ -2,6 +2,8 @@ package game
 
 import (
 	"fmt"
+	"os"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -333,8 +335,23 @@ func GetEffectDisplayString(effect models.RitualEffect) string {
 	return fmt.Sprintf("%s%d%%%s", sign, percent, suffix)
 }
 
-// GetRitualEffectIcon returns an emoji icon for the effect type.
+// GetRitualEffectIcon returns an icon for the effect type.
+// Uses ASCII fallbacks on legacy Windows CMD for compatibility.
 func GetRitualEffectIcon(effectType models.RitualEffectType) string {
+	if !supportsEmoji() {
+		switch effectType {
+		case models.RitualEffectDamage:
+			return "[F]"
+		case models.RitualEffectCooldown:
+			return "[I]"
+		case models.RitualEffectManaCost:
+			return "[T]"
+		case models.RitualEffectSigilRate:
+			return "[A]"
+		default:
+			return "[*]"
+		}
+	}
 	switch effectType {
 	case models.RitualEffectDamage:
 		return "🔥"
@@ -347,4 +364,22 @@ func GetRitualEffectIcon(effectType models.RitualEffectType) string {
 	default:
 		return "⭐"
 	}
+}
+
+// supportsEmoji detects if the current terminal supports emoji display.
+func supportsEmoji() bool {
+	if runtime.GOOS != "windows" {
+		return true
+	}
+	// Windows Terminal, VS Code, ConEmu, etc. support emojis
+	if os.Getenv("WT_SESSION") != "" ||
+		os.Getenv("TERM_PROGRAM") == "vscode" ||
+		os.Getenv("ConEmuANSI") == "ON" ||
+		os.Getenv("ANSICON") != "" {
+		return true
+	}
+	if term := os.Getenv("TERM"); term != "" && term != "dumb" {
+		return true
+	}
+	return false
 }

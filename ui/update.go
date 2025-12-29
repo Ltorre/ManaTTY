@@ -523,7 +523,7 @@ func (m Model) handleTick(msg TickMsg) (tea.Model, tea.Cmd) {
 	}
 
 	// Auto-save every 30 seconds
-	if m.saveRepo != nil && time.Since(m.gameState.Session.LastSavedAt) > 30*time.Second {
+	if m.saveStore != nil && time.Since(m.gameState.Session.LastSavedAt) > 30*time.Second {
 		return m, tea.Batch(m.tickCmd(), m.saveGameCmd())
 	}
 
@@ -533,7 +533,7 @@ func (m Model) handleTick(msg TickMsg) (tea.Model, tea.Cmd) {
 // saveGameCmd returns a command to save the game.
 func (m Model) saveGameCmd() tea.Cmd {
 	return func() tea.Msg {
-		if m.saveRepo == nil || m.gameState == nil {
+		if m.saveStore == nil || m.gameState == nil {
 			return SaveCompleteMsg{Error: nil}
 		}
 
@@ -541,7 +541,7 @@ func (m Model) saveGameCmd() tea.Cmd {
 		defer cancel()
 
 		m.gameState.Session.LastSavedAt = time.Now()
-		err := m.saveRepo.Save(ctx, m.gameState)
+		err := m.saveStore.Save(ctx, m.gameState)
 		return SaveCompleteMsg{Error: err}
 	}
 }

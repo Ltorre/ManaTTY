@@ -18,6 +18,7 @@ var ErrPlayerNotFound = errors.New("player not found")
 var ErrPlayerExists = errors.New("player already exists")
 
 // PlayerRepository handles player database operations.
+// Implements the PlayerStore interface.
 type PlayerRepository struct {
 	collection *mongo.Collection
 }
