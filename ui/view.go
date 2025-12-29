@@ -224,7 +224,7 @@ func (m Model) viewSpells() string {
 		autoCastStatus = "ON"
 	}
 	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("⚡ Auto-Cast Loadout [%s] (%d/%d slots)", autoCastStatus, usedSlots, maxSlots)))
-	
+
 	if len(m.gameState.Session.AutoCastSlots) == 0 {
 		lines = append(lines, DimStyle.Render("  (empty - press Space on a spell to add)"))
 	} else {
