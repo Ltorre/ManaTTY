@@ -68,9 +68,10 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 	// Calculate effective cooldown (with level bonuses)
 	baseCooldown := game.CalculateSpellEffectiveCooldown(spell.BaseCooldownMs, spell.Level)
 	cooldownReduction := gs.PrestigeData.SpellCooldownReduction
+	floorBuff := gs.GetActiveFloorBuffChoice(gs.Tower.CurrentFloor)
 
 	// Floor-event temporary bonus: additional cooldown reduction
-	if gs.HasActiveFloorEventBuff(gs.Tower.CurrentFloor) && gs.Session.ActiveFloorBuff.Choice == models.FloorEventChoiceCooldownReduction {
+	if floorBuff == models.FloorEventChoiceCooldownReduction {
 		cooldownReduction += game.FloorEventCooldownReduction
 	}
 
@@ -128,7 +129,7 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		sigilCharge *= (1.0 + game.ResonanceArcaneSigilChargeBonus)
 	}
 	// Floor-event temporary bonus: increase sigil charge rate
-	if gs.HasActiveFloorEventBuff(gs.Tower.CurrentFloor) && gs.Session.ActiveFloorBuff.Choice == models.FloorEventChoiceSigilChargeRate {
+	if floorBuff == models.FloorEventChoiceSigilChargeRate {
 		sigilCharge *= (1.0 + game.FloorEventSigilChargeRateBonus)
 	}
 	gs.Tower.AddSigilCharge(sigilCharge)

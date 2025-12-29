@@ -81,10 +81,10 @@ const (
 	// Floor Events (Lightweight)
 	// Every FloorEventIntervalFloors floors, a timed choice appears.
 	// If not chosen within FloorEventTimeoutMs, it vanishes with no bonus.
-	FloorEventIntervalFloors      = 25
-	FloorEventTimeoutMs           = int64(2 * 60 * 1000) // 2 minutes
-	FloorEventBuffDurationFloors  = 10
-	FloorEventManaGenBonus        = 0.10 // +10% mana/sec for duration
+	FloorEventIntervalFloors       = 25
+	FloorEventTimeoutMs            = int64(2 * 60 * 1000) // 2 minutes
+	FloorEventBuffDurationFloors   = 10
+	FloorEventManaGenBonus         = 0.10 // +10% mana/sec for duration
 	FloorEventSigilChargeRateBonus = 0.10 // +10% sigil charge for duration
-	FloorEventCooldownReduction   = 0.10 // -10% spell cooldown for duration
+	FloorEventCooldownReduction    = 0.10 // -10% spell cooldown for duration
 )
