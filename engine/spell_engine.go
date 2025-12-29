@@ -2,6 +2,7 @@ package engine
 
 import (
 	"errors"
+	"math/rand/v2"
 
 	"github.com/Ltorre/ManaTTY/game"
 	"github.com/Ltorre/ManaTTY/models"
@@ -9,16 +10,22 @@ import (
 
 // Spell casting errors
 var (
-	ErrSpellOnCooldown  = errors.New("spell is on cooldown")
-	ErrInsufficientMana = errors.New("insufficient mana")
-	ErrSpellNotFound    = errors.New("spell not found")
-	ErrSpellNotUnlocked = errors.New("spell not unlocked")
-	ErrSpellMaxLevel    = errors.New("spell already at max level")
+	ErrSpellOnCooldown     = errors.New("spell is on cooldown")
+	ErrInsufficientMana    = errors.New("insufficient mana")
+	ErrSpellNotFound       = errors.New("spell not found")
+	ErrSpellNotUnlocked    = errors.New("spell not unlocked")
+	ErrSpellMaxLevel       = errors.New("spell already at max level")
+	ErrNeedsSpecialization = errors.New("spell needs specialization choice")
 )
 
 // CastSpell attempts to cast a spell.
 // Both manual and auto-cast now require mana. Manual costs +10% more.
 func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual bool) error {
+	// Check if spell needs specialization choice before allowing cast
+	if _, needs := spell.NeedsSpecialization(); needs {
+		return ErrNeedsSpecialization
+	}
+
 	// Check cooldown
 	if !spell.IsReady() {
 		return ErrSpellOnCooldown
@@ -28,6 +35,11 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 	manaCost := game.CalculateSpellEffectiveManaCost(spell.BaseManaRequirement, spell.Level)
 	if manual {
 		manaCost = game.CalculateManualCastCost(manaCost)
+	}
+
+	// Apply Mana Efficiency specialization (-20% mana cost)
+	if spell.HasSpecialization(models.SpecManaEfficiency) {
+		manaCost *= (1.0 - game.SpecManaEfficiencyBonus)
 	}
 
 	// Apply synergy bonus if active and matching element
@@ -47,6 +59,11 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 	baseCooldown := game.CalculateSpellEffectiveCooldown(spell.BaseCooldownMs, spell.Level)
 	cooldownReduction := gs.PrestigeData.SpellCooldownReduction
 
+	// Apply Rapid Cast specialization (-25% cooldown)
+	if spell.HasSpecialization(models.SpecRapidCast) {
+		cooldownReduction += game.SpecRapidCastBonus
+	}
+
 	// Apply synergy bonus to cooldown if active
 	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
 		cooldownReduction += game.ElementSynergyBonus // Additional 20% reduction
@@ -62,6 +79,19 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 
 	// Calculate and apply damage to Ascension Sigil
 	damage := spell.GetEffectiveDamage(game.SpellDamagePerLevel)
+
+	// Apply Burst Damage specialization (+30% damage)
+	if spell.HasSpecialization(models.SpecBurstDamage) {
+		damage *= (1.0 + game.SpecBurstDamageBonus)
+	}
+
+	// Apply Crit Chance specialization (15% chance for 2x damage)
+	if spell.HasSpecialization(models.SpecCritChance) {
+		if rand.Float64() < game.SpecCritChanceBonus {
+			damage *= game.SpecCritDamageMulti
+		}
+	}
+
 	// Apply synergy bonus to damage if active
 	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
 		damage *= (1.0 + game.ElementSynergyBonus) // +20% damage during synergy

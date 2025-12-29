@@ -14,6 +14,38 @@ const (
 	ElementArcane  Element = "arcane"
 )
 
+// SpellSpecialization represents a chosen perk for a spell at milestone levels.
+type SpellSpecialization string
+
+const (
+	// SpecNone represents no specialization chosen (default state)
+	SpecNone SpellSpecialization = ""
+
+	// Tier 1 specializations (unlocked at level 5)
+	SpecCritChance     SpellSpecialization = "crit_chance"     // +15% crit chance (2x damage on crit)
+	SpecManaEfficiency SpellSpecialization = "mana_efficiency" // +20% reduced mana cost
+
+	// Tier 2 specializations (unlocked at level 10)
+	SpecBurstDamage SpellSpecialization = "burst_damage" // +30% damage
+	SpecRapidCast   SpellSpecialization = "rapid_cast"   // +25% cooldown reduction
+)
+
+// SpecializationDisplayNames provides consistent display names for specializations.
+var SpecializationDisplayNames = map[SpellSpecialization]string{
+	SpecCritChance:     "Crit Chance",
+	SpecManaEfficiency: "Mana Efficiency",
+	SpecBurstDamage:    "Burst Damage",
+	SpecRapidCast:      "Rapid Cast",
+}
+
+// SpecializationShortNames provides abbreviated display names for compact UI.
+var SpecializationShortNames = map[SpellSpecialization]string{
+	SpecCritChance:     "Crit",
+	SpecManaEfficiency: "Mana-",
+	SpecBurstDamage:    "Burst",
+	SpecRapidCast:      "Rapid",
+}
+
 // SpellDefinition represents a spell template (stored in DB).
 // Note: Spell level scaling uses global constants from game/constants.go:
 // - SpellDamagePerLevel (+15% per level)
@@ -47,6 +79,10 @@ type Spell struct {
 	CooldownRemainingMs int64     `bson:"cooldown_remaining_ms" json:"cooldown_remaining_ms"`
 	LastCastTime        time.Time `bson:"last_cast_time" json:"last_cast_time"`
 	CastCount           int       `bson:"cast_count" json:"cast_count"`
+
+	// Specializations chosen at milestone levels
+	Tier1Spec SpellSpecialization `bson:"tier1_spec" json:"tier1_spec"` // Chosen at level 5
+	Tier2Spec SpellSpecialization `bson:"tier2_spec" json:"tier2_spec"` // Chosen at level 10
 }
 
 // NewSpellFromDefinition creates a Spell instance from a SpellDefinition.
@@ -145,4 +181,23 @@ func (s *Spell) LevelUp(maxLevel int) bool {
 	}
 	s.Level++
 	return true
+}
+
+// NeedsSpecialization returns true if spell is at a milestone level without a chosen spec.
+// Checks Tier 2 first (higher level) to ensure both tiers are properly prompted.
+func (s *Spell) NeedsSpecialization() (tier int, needs bool) {
+	// Check Tier 2 first (level 10) - higher priority
+	if s.Level >= 10 && s.Tier2Spec == SpecNone {
+		return 2, true
+	}
+	// Then check Tier 1 (level 5)
+	if s.Level >= 5 && s.Tier1Spec == SpecNone {
+		return 1, true
+	}
+	return 0, false
+}
+
+// HasSpecialization checks if spell has a specific specialization.
+func (s *Spell) HasSpecialization(spec SpellSpecialization) bool {
+	return s.Tier1Spec == spec || s.Tier2Spec == spec
 }
