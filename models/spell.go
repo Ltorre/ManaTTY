@@ -15,6 +15,10 @@ const (
 )
 
 // SpellDefinition represents a spell template (stored in DB).
+// Note: Spell level scaling uses global constants from game/constants.go:
+// - SpellDamagePerLevel (+15% per level)
+// - SpellCooldownPerLevel (-5% per level)
+// - SpellManaCostPerLevel (-8% per level)
 type SpellDefinition struct {
 	ID                string  `bson:"_id" json:"id"`
 	Name              string  `bson:"name" json:"name"`
@@ -27,12 +31,7 @@ type SpellDefinition struct {
 	RequiredFloor     int     `bson:"required_floor" json:"required_floor"`
 	UnlockedByDefault bool    `bson:"unlocked_by_default" json:"unlocked_by_default"`
 	PrestigeExclusive bool    `bson:"prestige_exclusive" json:"prestige_exclusive"`
-	Scaling           struct {
-		DamagePerLevel          float64 `bson:"damage_per_level" json:"damage_per_level"`
-		CooldownReductionPerLvl int64   `bson:"cooldown_reduction_per_level" json:"cooldown_reduction_per_level"`
-		ManaCostReductionPerLvl float64 `bson:"mana_cost_reduction_per_level" json:"mana_cost_reduction_per_level"`
-	} `bson:"scaling" json:"scaling"`
-	Version int `bson:"version" json:"version"`
+	Version           int     `bson:"version" json:"version"`
 }
 
 // Spell represents a player's instance of a spell with progress.
