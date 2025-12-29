@@ -31,6 +31,23 @@ type PassiveBonuses struct {
 	RitualCapacity         int     `bson:"ritual_capacity" json:"ritual_capacity"`
 }
 
+// AutoCastCondition defines when an auto-cast slot should trigger.
+type AutoCastCondition string
+
+const (
+	ConditionAlways        AutoCastCondition = "always"         // Always cast when ready
+	ConditionManaAbove50   AutoCastCondition = "mana_above_50"  // Only if mana > 50%
+	ConditionManaAbove75   AutoCastCondition = "mana_above_75"  // Only if mana > 75%
+	ConditionSigilNotFull  AutoCastCondition = "sigil_not_full" // Only if sigil not charged
+	ConditionSynergyActive AutoCastCondition = "synergy_active" // Only during element synergy
+)
+
+// AutoCastSlotConfig holds the spell ID and condition for an auto-cast slot.
+type AutoCastSlotConfig struct {
+	SpellID   string            `bson:"spell_id" json:"spell_id"`
+	Condition AutoCastCondition `bson:"condition" json:"condition"`
+}
+
 // SessionData contains current play session information.
 type SessionData struct {
 	SessionStartMs  int64     `bson:"session_start_ms" json:"session_start_ms"`
@@ -38,7 +55,10 @@ type SessionData struct {
 	LastTickMs      int64     `bson:"last_tick_ms" json:"last_tick_ms"`
 	LastSavedAt     time.Time `bson:"last_saved_at" json:"last_saved_at"`
 	AutoCastEnabled bool      `bson:"auto_cast_enabled" json:"auto_cast_enabled"`
-	AutoCastSlots   []string  `bson:"auto_cast_slots" json:"auto_cast_slots"` // Spell IDs in auto-cast slots
+	AutoCastSlots   []string  `bson:"auto_cast_slots" json:"auto_cast_slots"` // Spell IDs in auto-cast slots (legacy, kept for compat)
+
+	// Auto-cast slot configurations with conditions
+	AutoCastConfigs []AutoCastSlotConfig `bson:"auto_cast_configs" json:"auto_cast_configs"`
 
 	// Element synergy tracking
 	LastCastElements   []Element `bson:"last_cast_elements" json:"last_cast_elements"`       // Recent cast elements (up to 3)
@@ -87,7 +107,8 @@ func NewSessionData() *SessionData {
 		LastTickMs:         now.UnixMilli(),
 		LastSavedAt:        now,
 		AutoCastEnabled:    true,
-		AutoCastSlots:      []string{}, // Start with empty slots
+		AutoCastSlots:      []string{},             // Legacy, kept for compatibility
+		AutoCastConfigs:    []AutoCastSlotConfig{}, // New: slots with conditions
 		LastCastElements:   []Element{},
 		ActiveSynergy:      "",
 		SynergyExpiresAtMs: 0,
@@ -149,6 +170,13 @@ func (gs *GameState) UpdateSession() {
 
 // IsSpellInAutoCast returns true if a spell is in an auto-cast slot.
 func (gs *GameState) IsSpellInAutoCast(spellID string) bool {
+	// Check new config system first
+	for _, cfg := range gs.Session.AutoCastConfigs {
+		if cfg.SpellID == spellID {
+			return true
+		}
+	}
+	// Fallback to legacy slots for backward compatibility
 	for _, id := range gs.Session.AutoCastSlots {
 		if id == spellID {
 			return true
@@ -166,23 +194,45 @@ func (gs *GameState) GetAutoCastSlotCount() int {
 
 // GetAvailableAutoCastSlots returns remaining slot capacity.
 func (gs *GameState) GetAvailableAutoCastSlots() int {
-	return gs.GetAutoCastSlotCount() - len(gs.Session.AutoCastSlots)
+	usedSlots := len(gs.Session.AutoCastConfigs)
+	if usedSlots == 0 {
+		usedSlots = len(gs.Session.AutoCastSlots) // Legacy fallback
+	}
+	return gs.GetAutoCastSlotCount() - usedSlots
 }
 
-// AddSpellToAutoCast adds a spell to auto-cast slots if capacity allows.
+// AddSpellToAutoCast adds a spell to auto-cast slots with default condition.
 func (gs *GameState) AddSpellToAutoCast(spellID string) bool {
+	return gs.AddSpellToAutoCastWithCondition(spellID, ConditionAlways)
+}
+
+// AddSpellToAutoCastWithCondition adds a spell to auto-cast slots with a specific condition.
+func (gs *GameState) AddSpellToAutoCastWithCondition(spellID string, condition AutoCastCondition) bool {
 	if gs.IsSpellInAutoCast(spellID) {
 		return false // Already in slot
 	}
 	if gs.GetAvailableAutoCastSlots() <= 0 {
 		return false // No slots available
 	}
+	gs.Session.AutoCastConfigs = append(gs.Session.AutoCastConfigs, AutoCastSlotConfig{
+		SpellID:   spellID,
+		Condition: condition,
+	})
+	// Also update legacy slots for backward compat
 	gs.Session.AutoCastSlots = append(gs.Session.AutoCastSlots, spellID)
 	return true
 }
 
 // RemoveSpellFromAutoCast removes a spell from auto-cast slots.
 func (gs *GameState) RemoveSpellFromAutoCast(spellID string) bool {
+	// Remove from new config system
+	for i, cfg := range gs.Session.AutoCastConfigs {
+		if cfg.SpellID == spellID {
+			gs.Session.AutoCastConfigs = append(gs.Session.AutoCastConfigs[:i], gs.Session.AutoCastConfigs[i+1:]...)
+			break
+		}
+	}
+	// Remove from legacy slots
 	for i, id := range gs.Session.AutoCastSlots {
 		if id == spellID {
 			gs.Session.AutoCastSlots = append(gs.Session.AutoCastSlots[:i], gs.Session.AutoCastSlots[i+1:]...)
@@ -190,6 +240,47 @@ func (gs *GameState) RemoveSpellFromAutoCast(spellID string) bool {
 		}
 	}
 	return false
+}
+
+// GetAutoCastCondition returns the condition for a spell's auto-cast slot.
+func (gs *GameState) GetAutoCastCondition(spellID string) AutoCastCondition {
+	for _, cfg := range gs.Session.AutoCastConfigs {
+		if cfg.SpellID == spellID {
+			return cfg.Condition
+		}
+	}
+	return ConditionAlways // Default for legacy slots
+}
+
+// SetAutoCastCondition updates the condition for a spell's auto-cast slot.
+func (gs *GameState) SetAutoCastCondition(spellID string, condition AutoCastCondition) bool {
+	for i, cfg := range gs.Session.AutoCastConfigs {
+		if cfg.SpellID == spellID {
+			gs.Session.AutoCastConfigs[i].Condition = condition
+			return true
+		}
+	}
+	return false
+}
+
+// CycleAutoCastCondition cycles through available conditions for a slot.
+func (gs *GameState) CycleAutoCastCondition(spellID string) AutoCastCondition {
+	conditions := []AutoCastCondition{
+		ConditionAlways,
+		ConditionManaAbove50,
+		ConditionManaAbove75,
+		ConditionSigilNotFull,
+		ConditionSynergyActive,
+	}
+	current := gs.GetAutoCastCondition(spellID)
+	for i, cond := range conditions {
+		if cond == current {
+			nextIdx := (i + 1) % len(conditions)
+			gs.SetAutoCastCondition(spellID, conditions[nextIdx])
+			return conditions[nextIdx]
+		}
+	}
+	return ConditionAlways
 }
 
 // AutoCastToggleResult represents the result of toggling auto-cast.
@@ -217,6 +308,21 @@ func (gs *GameState) ToggleSpellAutoCast(spellID string) AutoCastToggleResult {
 // MoveAutoCastSlot moves a spell in the auto-cast slots (for priority ordering).
 // direction: -1 = move up (higher priority), +1 = move down (lower priority)
 func (gs *GameState) MoveAutoCastSlot(spellID string, direction int) bool {
+	// Move in new config system
+	configs := gs.Session.AutoCastConfigs
+	for i, cfg := range configs {
+		if cfg.SpellID == spellID {
+			newIndex := i + direction
+			if newIndex < 0 || newIndex >= len(configs) {
+				return false // Can't move further
+			}
+			// Swap
+			configs[i], configs[newIndex] = configs[newIndex], configs[i]
+			break
+		}
+	}
+
+	// Also move in legacy slots for backward compat
 	slots := gs.Session.AutoCastSlots
 	for i, id := range slots {
 		if id == spellID {

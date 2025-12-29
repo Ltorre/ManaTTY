@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Ltorre/ManaTTY/models"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -93,6 +94,8 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handlePrestigeKeys(msg)
 	case ViewMenu:
 		return m.handleMenuKeys(msg)
+	case ViewSpecialize:
+		return m.handleSpecializeKeys(msg)
 	}
 
 	return m, nil
@@ -232,6 +235,40 @@ func (m Model) handleSpellsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.ShowNotification("Auto-cast disabled")
 			}
 		}
+	case "c":
+		// Cycle auto-cast condition for selected spell
+		if m.gameState != nil && m.selectedIndex < len(m.gameState.Spells) {
+			spell := m.gameState.Spells[m.selectedIndex]
+			if m.gameState.IsSpellInAutoCast(spell.ID) {
+				newCond := m.gameState.CycleAutoCastCondition(spell.ID)
+				condNames := map[models.AutoCastCondition]string{
+					models.ConditionAlways:        "Always",
+					models.ConditionManaAbove50:   "Mana > 50%",
+					models.ConditionManaAbove75:   "Mana > 75%",
+					models.ConditionSigilNotFull:  "Sigil not full",
+					models.ConditionSynergyActive: "Synergy active",
+				}
+				m.ShowNotification(fmt.Sprintf("%s: %s", spell.Name, condNames[newCond]))
+			} else {
+				m.ShowNotification(spell.Name + " not in auto-cast slot")
+			}
+		}
+	case "x":
+		// Open specialization menu if spell needs it
+		if m.gameState != nil && m.selectedIndex < len(m.gameState.Spells) {
+			spell := m.gameState.Spells[m.selectedIndex]
+			tier, needs := spell.NeedsSpecialization()
+			if needs {
+				m.specSpellID = spell.ID
+				m.specTier = tier
+				m.specChoiceIdx = 0
+				m.Navigate(ViewSpecialize)
+			} else if spell.Level >= 5 {
+				m.ShowNotification("Already specialized")
+			} else {
+				m.ShowNotification("Reach level 5 to specialize")
+			}
+		}
 	}
 	return m, nil
 }
@@ -309,6 +346,54 @@ func (m Model) handlePrestigeConfirmed() (tea.Model, tea.Cmd) {
 	if m.engine != nil && m.engine.ProcessPrestige(m.gameState) {
 		m.ShowNotification("Ascended to Era " + string(rune('0'+m.gameState.PrestigeData.CurrentEra)) + "!")
 		m.Navigate(ViewTower)
+	}
+	return m, nil
+}
+
+// handleSpecializeKeys handles keys in the specialization view.
+func (m Model) handleSpecializeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "up", "k", "left", "h":
+		if m.specChoiceIdx > 0 {
+			m.specChoiceIdx--
+		}
+	case "down", "j", "right", "l":
+		if m.specChoiceIdx < 1 {
+			m.specChoiceIdx++
+		}
+	case "enter", " ":
+		// Apply specialization
+		if m.gameState != nil {
+			spell := m.gameState.GetSpellByID(m.specSpellID)
+			if spell != nil {
+				var spec models.SpellSpecialization
+				if m.specTier == 1 {
+					if m.specChoiceIdx == 0 {
+						spec = models.SpecCritChance
+					} else {
+						spec = models.SpecManaEfficiency
+					}
+					spell.Tier1Spec = spec
+				} else {
+					if m.specChoiceIdx == 0 {
+						spec = models.SpecBurstDamage
+					} else {
+						spec = models.SpecRapidCast
+					}
+					spell.Tier2Spec = spec
+				}
+				specNames := map[models.SpellSpecialization]string{
+					models.SpecCritChance:     "Crit Chance",
+					models.SpecManaEfficiency: "Mana Efficiency",
+					models.SpecBurstDamage:    "Burst Damage",
+					models.SpecRapidCast:      "Rapid Cast",
+				}
+				m.ShowNotification(fmt.Sprintf("%s specialized: %s!", spell.Name, specNames[spec]))
+				m.Navigate(ViewSpells)
+			}
+		}
+	case "esc", "b":
+		m.Navigate(ViewSpells)
 	}
 	return m, nil
 }

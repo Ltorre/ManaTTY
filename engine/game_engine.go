@@ -159,25 +159,67 @@ func (e *GameEngine) UpdateRitualCooldowns(gs *models.GameState, elapsedMs int64
 	}
 }
 
-// ProcessAutoCasts automatically casts spells in auto-cast slots if mana is available.
+// ProcessAutoCasts automatically casts spells in auto-cast slots if mana is available
+// and their conditional rules are satisfied.
 // Only spells assigned to auto-cast slots will be cast automatically.
-// Returns the number of spells skipped due to insufficient mana.
+// Returns the number of spells skipped due to insufficient mana or unmet conditions.
 // Note: The return value is primarily for internal tracking; use GetAndResetSkipCount
 // to retrieve the accumulated skip count for UI notifications.
 func (e *GameEngine) ProcessAutoCasts(gs *models.GameState) int {
 	skipped := 0
-	for _, spellID := range gs.Session.AutoCastSlots {
-		spell := gs.GetSpellByID(spellID)
-		if spell != nil && spell.IsReady() {
+
+	// Use new AutoCastConfigs if available, fall back to legacy AutoCastSlots
+	if len(gs.Session.AutoCastConfigs) > 0 {
+		for _, config := range gs.Session.AutoCastConfigs {
+			spell := gs.GetSpellByID(config.SpellID)
+			if spell == nil || !spell.IsReady() {
+				continue
+			}
+
+			// Check condition before casting
+			if !e.checkAutoCastCondition(gs, config.Condition) {
+				continue
+			}
+
 			// CastSpell will check mana and skip if insufficient
 			if err := e.CastSpell(gs, spell, false); err == ErrInsufficientMana {
 				skipped++
 				continue
 			}
 		}
+	} else {
+		// Legacy path: use AutoCastSlots with no conditions
+		for _, spellID := range gs.Session.AutoCastSlots {
+			spell := gs.GetSpellByID(spellID)
+			if spell != nil && spell.IsReady() {
+				if err := e.CastSpell(gs, spell, false); err == ErrInsufficientMana {
+					skipped++
+					continue
+				}
+			}
+		}
 	}
+
 	gs.Session.AutoCastSkipCount += skipped
 	return skipped
+}
+
+// checkAutoCastCondition evaluates whether an auto-cast condition is satisfied.
+func (e *GameEngine) checkAutoCastCondition(gs *models.GameState, cond models.AutoCastCondition) bool {
+	switch cond {
+	case models.ConditionAlways:
+		return true
+	case models.ConditionManaAbove50:
+		return gs.Tower.CurrentMana >= gs.Tower.MaxMana*0.5
+	case models.ConditionManaAbove75:
+		return gs.Tower.CurrentMana >= gs.Tower.MaxMana*0.75
+	case models.ConditionSigilNotFull:
+		return !gs.Tower.IsSigilCharged()
+	case models.ConditionSynergyActive:
+		return gs.HasActiveSynergy()
+	default:
+		return true
+	}
 }
 
 // GetAndResetSkipCount returns the accumulated skip count and resets it.

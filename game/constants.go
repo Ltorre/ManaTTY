@@ -39,6 +39,15 @@ const (
 	SpellManaCostPerLevel    = 0.08  // -8% mana cost per level
 	SpellDamagePerLevel      = 0.15  // +15% damage per level
 
+	// Spell Specializations (chosen at levels 5 and 10)
+	SpecTier1Level          = 5    // Level to unlock tier 1 specialization
+	SpecTier2Level          = 10   // Level to unlock tier 2 specialization
+	SpecCritChanceBonus     = 0.15 // +15% crit chance (Tier 1)
+	SpecCritDamageMulti     = 2.0  // 2x damage on crit
+	SpecManaEfficiencyBonus = 0.20 // -20% mana cost (Tier 1)
+	SpecBurstDamageBonus    = 0.30 // +30% damage (Tier 2)
+	SpecRapidCastBonus      = 0.25 // -25% cooldown (Tier 2)
+
 	// Element Synergies
 	ElementStreakRequired  = 3    // Casts of same element to trigger synergy
 	ElementSynergyDuration = 10.0 // Seconds the synergy buff lasts
