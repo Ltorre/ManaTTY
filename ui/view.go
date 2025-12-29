@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Ltorre/ManaTTY/game"
 	"github.com/Ltorre/ManaTTY/utils"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -129,6 +130,21 @@ func (m Model) viewTower() string {
 		autoCastStatus = "OFF"
 	}
 	lines = append(lines, fmt.Sprintf("  Auto-cast: %s", autoCastStatus))
+
+	// Element synergy status
+	if gs.HasActiveSynergy() {
+		element := gs.GetActiveSynergy()
+		remaining := gs.GetSynergyTimeRemaining() / 1000 // convert to seconds
+		synergyStr := fmt.Sprintf("  %s Synergy: %ds remaining (20%% bonus)",
+			string(element), remaining)
+		lines = append(lines, HighlightStyle.Render(synergyStr))
+	} else if len(gs.Session.LastCastElements) > 0 {
+		// Show element streak progress
+		streakLen := len(gs.Session.LastCastElements)
+		lastElement := gs.Session.LastCastElements[streakLen-1]
+		lines = append(lines, DimStyle.Render(fmt.Sprintf("  Element streak: %s ×%d/3",
+			string(lastElement), streakLen)))
+	}
 	lines = append(lines, "")
 
 	// Active rituals
@@ -185,24 +201,46 @@ func (m Model) viewSpells() string {
 
 	var lines []string
 
-	header := HeaderStyle.Width(60).Render(
+	header := HeaderStyle.Width(70).Render(
 		TitleStyle.Render("📜 SPELLS"),
 	)
 	lines = append(lines, header)
 	lines = append(lines, "")
 
-	// Auto-cast slots header
+	// Element Synergy Status
+	if m.gameState.HasActiveSynergy() {
+		synergy := m.gameState.GetActiveSynergy()
+		remaining := m.gameState.GetSynergyTimeRemaining() / 1000
+		icon := GetElementIcon(string(synergy))
+		lines = append(lines, SuccessStyle.Render(fmt.Sprintf("🔥 %s SYNERGY ACTIVE! +20%% bonus (%ds remaining)", icon, remaining)))
+		lines = append(lines, "")
+	}
+
+	// Auto-Cast Loadout Panel
 	usedSlots := len(m.gameState.Session.AutoCastSlots)
 	maxSlots := m.gameState.GetAutoCastSlotCount()
 	autoCastStatus := "OFF"
 	if m.gameState.Session.AutoCastEnabled {
 		autoCastStatus = "ON"
 	}
-	lines = append(lines, HighlightStyle.Render(fmt.Sprintf("Auto-Cast: %s | Slots: %d/%d", autoCastStatus, usedSlots, maxSlots)))
-	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("⚡ Auto-Cast Loadout [%s] (%d/%d slots)", autoCastStatus, usedSlots, maxSlots)))
+	
+	if len(m.gameState.Session.AutoCastSlots) == 0 {
+		lines = append(lines, DimStyle.Render("  (empty - press Space on a spell to add)"))
+	} else {
+		for i, spellID := range m.gameState.Session.AutoCastSlots {
+			spell := m.gameState.GetSpellByID(spellID)
+			if spell != nil {
+				icon := GetElementIcon(string(spell.Element))
+				lines = append(lines, TextStyle.Render(fmt.Sprintf("  %d. %s %s (Lv%d)", i+1, icon, spell.Name, spell.Level)))
+			}
+		}
+	}
+	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
 	lines = append(lines, "")
 
 	// Spell list
+	lines = append(lines, SubtitleStyle.Render("All Spells"))
 	for i, spell := range m.gameState.Spells {
 		selected := i == m.selectedIndex
 		icon := GetElementIcon(string(spell.Element))
@@ -212,20 +250,29 @@ func (m Model) viewSpells() string {
 			prefix = "> "
 		}
 
-		// Auto-cast indicator
-		autoIndicator := "  "
-		if m.gameState.IsSpellInAutoCast(spell.ID) {
-			autoIndicator = "⚡"
+		// Auto-cast indicator with position
+		autoIndicator := "   "
+		for idx, slotID := range m.gameState.Session.AutoCastSlots {
+			if slotID == spell.ID {
+				autoIndicator = fmt.Sprintf("[%d]", idx+1)
+				break
+			}
 		}
 
 		// Status
-		status := SuccessStyle.Render("Ready!")
+		status := SuccessStyle.Render("Ready")
 		if !spell.IsReady() {
 			status = WarningStyle.Render(utils.FormatCooldown(spell.CooldownRemainingMs))
 		}
 
-		line := fmt.Sprintf("%s%s %s %s (Lv%d) - %s",
-			prefix, autoIndicator, icon, spell.Name, spell.Level, status)
+		// Level indicator with max check
+		levelStr := fmt.Sprintf("Lv%d", spell.Level)
+		if spell.Level >= game.SpellMaxLevel {
+			levelStr = "MAX"
+		}
+
+		line := fmt.Sprintf("%s%s %s %s (%s) - %s",
+			prefix, autoIndicator, icon, spell.Name, levelStr, status)
 
 		if selected {
 			lines = append(lines, SelectedStyle.Render(line))
@@ -236,17 +283,18 @@ func (m Model) viewSpells() string {
 		}
 
 		// Show details for selected spell
-		if selected {
-			inSlot := "No"
-			if m.gameState.IsSpellInAutoCast(spell.ID) {
-				inSlot = "Yes"
+		if selected && m.engine != nil {
+			stats := m.engine.GetSpellEffectiveStats(m.gameState, spell)
+			upgradeStr := fmt.Sprintf("Upgrade: %.0f mana", stats.UpgradeCost)
+			if !stats.CanUpgrade {
+				upgradeStr = "MAX LEVEL"
 			}
 			details := DimStyle.Render(fmt.Sprintf(
-				"      Element: %s | Cooldown: %s | Mana: %.0f | Auto: %s",
+				"      %s | CD: %s | Cost: %.0f | %s",
 				spell.Element,
-				utils.FormatMilliseconds(spell.BaseCooldownMs),
-				spell.BaseManaRequirement,
-				inSlot,
+				utils.FormatMilliseconds(stats.CooldownMs),
+				stats.ManaCost,
+				upgradeStr,
 			))
 			lines = append(lines, details)
 		}
@@ -254,8 +302,8 @@ func (m Model) viewSpells() string {
 
 	lines = append(lines, "")
 
-	// Footer
-	lines = append(lines, FooterStyle.Render("[↑↓] Navigate  [Enter] Cast  [Space] Toggle Auto-slot  [A] Auto On/Off  [B] Back"))
+	// Footer with contextual help
+	lines = append(lines, FooterStyle.Render("[↑↓] Select  [Enter] Cast  [U] Upgrade  [Space] Toggle Slot  [<>] Reorder  [A] Auto  [B] Back"))
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }

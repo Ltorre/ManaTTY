@@ -87,7 +87,10 @@ DEBUG=false
 - **Mana Generation:** Earn mana passively based on your current floor
 - **Floor Climbing:** Spend mana to ascend to higher floors (cost scales exponentially)
 - **Spells:** Unlock and cast 12 unique spells across 4 elements (Fire, Ice, Thunder, Arcane)
+- **Spell Leveling:** Spend mana to upgrade spells (max level 10) for reduced cooldown, lower mana cost, and increased damage
 - **Auto-Cast Slots:** Assign spells to limited auto-cast slots (base 2, up to 4 with prestige)
+- **Slot Priority:** Reorder auto-cast slots to control which spells cast first
+- **Element Synergies:** Cast 3 spells of the same element in a row for a 10-second buff (20% reduced cost & cooldown)
 - **Mana Economy:** All spells (auto and manual) consume mana—choose your auto-cast loadout wisely!
 - **Manual Casting:** Cast any spell manually (+10% mana cost) for tactical control
 - **Rituals:** Combine 3 spells for +15% mana generation per ritual
@@ -105,6 +108,8 @@ DEBUG=false
 | `M` | Open Menu |
 | `A` | Toggle Auto-cast on/off |
 | `Space` | Toggle spell in auto-cast slot (Spells view) |
+| `U` | Upgrade selected spell (Spells view) |
+| `<` / `>` | Reorder auto-cast slot priority (Spells view) |
 | `↑/↓` | Navigate lists |
 | `Enter` | Select/Cast spell manually |
 | `Ctrl+S` | Manual Save |

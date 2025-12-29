@@ -10,10 +10,12 @@ import (
 // GameEngine handles all game logic and state updates.
 type GameEngine struct {
 	// Event handlers
-	OnFloorClimbed  func(floor int)
-	OnSpellUnlocked func(spell *models.Spell)
-	OnManaGenerated func(amount float64)
-	OnPrestige      func(era int)
+	OnFloorClimbed     func(floor int)
+	OnSpellUnlocked    func(spell *models.Spell)
+	OnManaGenerated    func(amount float64)
+	OnPrestige         func(era int)
+	OnSynergyActivated func(element models.Element)
+	OnSpellUpgraded    func(spell *models.Spell)
 }
 
 // NewGameEngine creates a new game engine instance.
@@ -148,17 +150,30 @@ func (e *GameEngine) UpdateRitualCooldowns(gs *models.GameState, elapsedMs int64
 
 // ProcessAutoCasts automatically casts spells in auto-cast slots if mana is available.
 // Only spells assigned to auto-cast slots will be cast automatically.
-func (e *GameEngine) ProcessAutoCasts(gs *models.GameState) {
+// Returns the number of spells skipped due to insufficient mana.
+// Note: The return value is primarily for internal tracking; use GetAndResetSkipCount
+// to retrieve the accumulated skip count for UI notifications.
+func (e *GameEngine) ProcessAutoCasts(gs *models.GameState) int {
+	skipped := 0
 	for _, spellID := range gs.Session.AutoCastSlots {
 		spell := gs.GetSpellByID(spellID)
 		if spell != nil && spell.IsReady() {
 			// CastSpell will check mana and skip if insufficient
 			if err := e.CastSpell(gs, spell, false); err == ErrInsufficientMana {
-				// Not enough mana, continue to next slot
+				skipped++
 				continue
 			}
 		}
 	}
+	gs.Session.AutoCastSkipCount += skipped
+	return skipped
+}
+
+// GetAndResetSkipCount returns the accumulated skip count and resets it.
+func (e *GameEngine) GetAndResetSkipCount(gs *models.GameState) int {
+	count := gs.Session.AutoCastSkipCount
+	gs.Session.AutoCastSkipCount = 0
+	return count
 }
 
 // GetFloorProgress returns progress towards the next floor (0.0 to 1.0).
