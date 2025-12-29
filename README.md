@@ -42,7 +42,7 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 - [x] **Milestone 13 (v1.1.0):** Elemental Resonance Loadout Bonus
   - 2+ spells of the same element in auto-cast grants a passive perk while equipped
   - Encourages themed loadouts and element-focused buildcrafting
-- [ ] **Milestone 14 (v1.1.0):** Floor Events (Lightweight)
+- [x] **Milestone 14 (v1.1.0):** Floor Events (Lightweight)
   - Every 25 floors, a timed choice appears: +mana/sec (10 floors) vs +sigil charge rate (10 floors) vs -cooldowns (10 floors)
   - If you don’t choose within 2 minutes, the event vanishes with no bonus (prevents idle lock-ups)
 
