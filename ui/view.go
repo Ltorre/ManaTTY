@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Ltorre/ManaTTY/game"
+	"github.com/Ltorre/ManaTTY/models"
 	"github.com/Ltorre/ManaTTY/utils"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -30,6 +31,8 @@ func (m Model) View() string {
 		content = m.viewPrestige()
 	case ViewMenu:
 		content = m.viewMenu()
+	case ViewSpecialize:
+		content = m.viewSpecialize()
 	default:
 		content = m.viewTower()
 	}
@@ -251,14 +254,26 @@ func (m Model) viewSpells() string {
 	}
 	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("⚡ Auto-Cast Loadout [%s] (%d/%d slots)", autoCastStatus, usedSlots, maxSlots)))
 
-	if len(m.gameState.Session.AutoCastSlots) == 0 {
+	// Determine which slot list to use (prefer new configs, fallback to legacy)
+	var slotSpellIDs []string
+	if len(m.gameState.Session.AutoCastConfigs) > 0 {
+		for _, cfg := range m.gameState.Session.AutoCastConfigs {
+			slotSpellIDs = append(slotSpellIDs, cfg.SpellID)
+		}
+	} else {
+		slotSpellIDs = m.gameState.Session.AutoCastSlots
+	}
+
+	if len(slotSpellIDs) == 0 {
 		lines = append(lines, DimStyle.Render("  (empty - press Space on a spell to add)"))
 	} else {
-		for i, spellID := range m.gameState.Session.AutoCastSlots {
+		for i, spellID := range slotSpellIDs {
 			spell := m.gameState.GetSpellByID(spellID)
 			if spell != nil {
 				icon := GetElementIcon(string(spell.Element))
-				lines = append(lines, TextStyle.Render(fmt.Sprintf("  %d. %s %s (Lv%d)", i+1, icon, spell.Name, spell.Level)))
+				cond := m.gameState.GetAutoCastCondition(spellID)
+				condStr := models.ConditionShortNames[cond]
+				lines = append(lines, TextStyle.Render(fmt.Sprintf("  %d. %s %s (Lv%d) [%s]", i+1, icon, spell.Name, spell.Level, condStr)))
 			}
 		}
 	}
@@ -315,13 +330,33 @@ func (m Model) viewSpells() string {
 			if !stats.CanUpgrade {
 				upgradeStr = "MAX LEVEL"
 			}
+
+			// Specialization info
+			specStr := ""
+			tier, needs := spell.NeedsSpecialization()
+			if needs {
+				specStr = fmt.Sprintf(" | ★ Tier %d SPEC READY!", tier)
+			} else {
+				specs := []string{}
+				if spell.Tier1Spec != models.SpecNone {
+					specs = append(specs, models.SpecializationShortNames[spell.Tier1Spec])
+				}
+				if spell.Tier2Spec != models.SpecNone {
+					specs = append(specs, models.SpecializationShortNames[spell.Tier2Spec])
+				}
+				if len(specs) > 0 {
+					specStr = " | ★" + strings.Join(specs, ",")
+				}
+			}
+
 			details := DimStyle.Render(fmt.Sprintf(
-				"      %s | DMG: %.0f | CD: %s | Cost: %.0f | %s",
+				"      %s | DMG: %.0f | CD: %s | Cost: %.0f | %s%s",
 				spell.Element,
 				stats.Damage,
 				utils.FormatMilliseconds(stats.CooldownMs),
 				stats.ManaCost,
 				upgradeStr,
+				specStr,
 			))
 			lines = append(lines, details)
 		}
@@ -330,7 +365,7 @@ func (m Model) viewSpells() string {
 	lines = append(lines, "")
 
 	// Footer with contextual help
-	lines = append(lines, FooterStyle.Render("[↑↓] Select  [Enter] Cast  [U] Upgrade  [Space] Toggle Slot  [<>] Reorder  [A] Auto  [B] Back"))
+	lines = append(lines, FooterStyle.Render("[↑↓] Select  [Enter] Cast  [U] Upgrade  [Space] Slot  [<>] Order  [C] Cond  [X] Spec  [A] Auto  [B] Back"))
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
@@ -528,6 +563,59 @@ func (m Model) viewPrestige() string {
 
 	// Footer
 	lines = append(lines, FooterStyle.Render("[B/Esc] Back"))
+
+	return lipgloss.JoinVertical(lipgloss.Left, lines...)
+}
+
+// viewSpecialize renders the spell specialization selection.
+func (m Model) viewSpecialize() string {
+	if m.gameState == nil {
+		return "Loading..."
+	}
+
+	spell := m.gameState.GetSpellByID(m.specSpellID)
+	if spell == nil {
+		return "Spell not found"
+	}
+
+	lines := []string{}
+	lines = append(lines, TitleStyle.Render("🔮 Spell Specialization"))
+	lines = append(lines, "")
+	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("Choose a Tier %d specialization for %s (Lv%d)", m.specTier, spell.Name, spell.Level)))
+	lines = append(lines, "")
+
+	type specOption struct {
+		spec models.SpellSpecialization
+		name string
+		desc string
+	}
+
+	var options []specOption
+	if m.specTier == 1 {
+		options = []specOption{
+			{models.SpecCritChance, "⚔️  Critical Strike", fmt.Sprintf("+%.0f%% chance for %.1fx damage", game.SpecCritChanceBonus*100, game.SpecCritDamageMulti)},
+			{models.SpecManaEfficiency, "💧 Mana Efficiency", fmt.Sprintf("-%.0f%% mana cost", game.SpecManaEfficiencyBonus*100)},
+		}
+	} else {
+		options = []specOption{
+			{models.SpecBurstDamage, "💥 Burst Damage", fmt.Sprintf("+%.0f%% spell damage", game.SpecBurstDamageBonus*100)},
+			{models.SpecRapidCast, "⚡ Rapid Cast", fmt.Sprintf("-%.0f%% cooldown", game.SpecRapidCastBonus*100)},
+		}
+	}
+
+	for i, opt := range options {
+		style := lipgloss.NewStyle().Padding(0, 2)
+		if i == m.specChoiceIdx {
+			style = style.Bold(true).Foreground(ColorAccent).
+				Border(lipgloss.RoundedBorder()).BorderForeground(ColorAccent)
+		}
+		optText := fmt.Sprintf("%s\n%s", opt.name, lipgloss.NewStyle().Foreground(ColorTextDim).Render(opt.desc))
+		lines = append(lines, style.Render(optText))
+		lines = append(lines, "")
+	}
+
+	lines = append(lines, "")
+	lines = append(lines, FooterStyle.Render("[↑/↓] Select  [Enter] Confirm  [Esc] Cancel"))
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
