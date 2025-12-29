@@ -13,6 +13,7 @@ var (
 	ErrInsufficientMana = errors.New("insufficient mana")
 	ErrSpellNotFound    = errors.New("spell not found")
 	ErrSpellNotUnlocked = errors.New("spell not unlocked")
+	ErrSpellMaxLevel    = errors.New("spell already at max level")
 )
 
 // CastSpell attempts to cast a spell.
@@ -23,10 +24,15 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		return ErrSpellOnCooldown
 	}
 
-	// Calculate mana cost (manual casts cost more due to ManualCastPenalty)
-	manaCost := spell.BaseManaRequirement
+	// Calculate effective mana cost (with level bonuses)
+	manaCost := game.CalculateSpellEffectiveManaCost(spell.BaseManaRequirement, spell.Level)
 	if manual {
-		manaCost = game.CalculateManualCastCost(spell.BaseManaRequirement)
+		manaCost = game.CalculateManualCastCost(manaCost)
+	}
+
+	// Apply synergy bonus if active and matching element
+	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
+		manaCost *= (1.0 - game.ElementSynergyBonus) // 20% cheaper
 	}
 
 	// Check mana - both auto and manual require mana now
@@ -37,9 +43,28 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 	// Deduct mana
 	gs.Tower.SpendMana(manaCost)
 
-	// Apply cooldown with prestige reduction
+	// Calculate effective cooldown (with level bonuses)
+	baseCooldown := game.CalculateSpellEffectiveCooldown(spell.BaseCooldownMs, spell.Level)
 	cooldownReduction := gs.PrestigeData.SpellCooldownReduction
-	spell.StartCooldown(cooldownReduction)
+
+	// Apply synergy bonus to cooldown if active
+	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
+		cooldownReduction += game.ElementSynergyBonus // Additional 20% reduction
+	}
+
+	spell.CooldownRemainingMs = game.CalculateSpellCooldown(baseCooldown, cooldownReduction)
+	spell.CastCount++
+
+	// Record for element synergy tracking
+	gs.RecordSpellCast(spell.Element)
+
+	// Check if synergy should trigger
+	if synergy := gs.CheckElementSynergy(); synergy != "" {
+		gs.ActivateSynergy(synergy, int64(game.ElementSynergyDuration*1000))
+		if e.OnSynergyActivated != nil {
+			e.OnSynergyActivated(synergy)
+		}
+	}
 
 	return nil
 }
@@ -173,4 +198,68 @@ func (e *GameEngine) GetMaxAutoCastSlots(gs *models.GameState) int {
 // GetUsedAutoCastSlots returns number of slots in use.
 func (e *GameEngine) GetUsedAutoCastSlots(gs *models.GameState) int {
 	return len(gs.Session.AutoCastSlots)
+}
+
+// MoveAutoCastSlotUp moves a spell higher in auto-cast priority.
+func (e *GameEngine) MoveAutoCastSlotUp(gs *models.GameState, spellID string) bool {
+	return gs.MoveAutoCastSlot(spellID, -1)
+}
+
+// MoveAutoCastSlotDown moves a spell lower in auto-cast priority.
+func (e *GameEngine) MoveAutoCastSlotDown(gs *models.GameState, spellID string) bool {
+	return gs.MoveAutoCastSlot(spellID, 1)
+}
+
+// GetSpellUpgradeCost returns the mana cost to upgrade a spell.
+func (e *GameEngine) GetSpellUpgradeCost(spell *models.Spell) float64 {
+	return game.CalculateSpellUpgradeCost(spell.Level, spell.BaseManaRequirement)
+}
+
+// CanUpgradeSpell returns true if the spell can be upgraded and player has enough mana.
+func (e *GameEngine) CanUpgradeSpell(gs *models.GameState, spell *models.Spell) bool {
+	if spell.Level >= game.SpellMaxLevel {
+		return false
+	}
+	cost := e.GetSpellUpgradeCost(spell)
+	return gs.Tower.CurrentMana >= cost
+}
+
+// UpgradeSpell upgrades a spell if possible, spending mana.
+func (e *GameEngine) UpgradeSpell(gs *models.GameState, spell *models.Spell) error {
+	if spell.Level >= game.SpellMaxLevel {
+		return ErrSpellMaxLevel
+	}
+
+	cost := e.GetSpellUpgradeCost(spell)
+	if gs.Tower.CurrentMana < cost {
+		return ErrInsufficientMana
+	}
+
+	gs.Tower.SpendMana(cost)
+	spell.LevelUp()
+
+	if e.OnSpellUpgraded != nil {
+		e.OnSpellUpgraded(spell)
+	}
+
+	return nil
+}
+
+// GetSpellEffectiveStats returns the effective stats for a spell at its current level.
+type SpellEffectiveStats struct {
+	ManaCost     float64
+	CooldownMs   int64
+	Damage       float64
+	UpgradeCost  float64
+	CanUpgrade   bool
+}
+
+func (e *GameEngine) GetSpellEffectiveStats(gs *models.GameState, spell *models.Spell) SpellEffectiveStats {
+	return SpellEffectiveStats{
+		ManaCost:    game.CalculateSpellEffectiveManaCost(spell.BaseManaRequirement, spell.Level),
+		CooldownMs:  game.CalculateSpellEffectiveCooldown(spell.BaseCooldownMs, spell.Level),
+		Damage:      spell.GetEffectiveDamage(game.SpellDamagePerLevel),
+		UpgradeCost: e.GetSpellUpgradeCost(spell),
+		CanUpgrade:  spell.Level < game.SpellMaxLevel,
+	}
 }

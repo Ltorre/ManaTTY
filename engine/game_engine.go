@@ -10,10 +10,12 @@ import (
 // GameEngine handles all game logic and state updates.
 type GameEngine struct {
 	// Event handlers
-	OnFloorClimbed  func(floor int)
-	OnSpellUnlocked func(spell *models.Spell)
-	OnManaGenerated func(amount float64)
-	OnPrestige      func(era int)
+	OnFloorClimbed     func(floor int)
+	OnSpellUnlocked    func(spell *models.Spell)
+	OnManaGenerated    func(amount float64)
+	OnPrestige         func(era int)
+	OnSynergyActivated func(element models.Element)
+	OnSpellUpgraded    func(spell *models.Spell)
 }
 
 // NewGameEngine creates a new game engine instance.
