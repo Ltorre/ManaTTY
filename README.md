@@ -39,12 +39,11 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
   - Tier 2 specializations at level 10: Burst Damage (+30% dmg) or Rapid Cast (-25% CD)
   - Auto-cast conditional rules: Always, Mana>50%, Mana>75%, Sigil not full, Synergy active
   - Press `X` to specialize, `C` to cycle conditions
+- [x] **Milestone 13 (v1.1.0):** Elemental Resonance Loadout Bonus
+  - 2+ spells of the same element in auto-cast grants a passive perk while equipped
+  - Encourages themed loadouts and element-focused buildcrafting
 
 ### Future Roadmap
-
-- [ ] **(Maybe) - Elemental Resonance Loadout Bonus**
-  - Reward themed loadouts: 2+ spells of the same element in auto-cast grants a passive perk while equipped
-  - Encourages buildcrafting decisions and element-focused strategies
 
 - [ ] **(Maybe) - Ritual Depth: Tiers & Evolution**
   - Casting the same ritual combo repeatedly "masters" it
