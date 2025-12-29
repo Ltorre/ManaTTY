@@ -45,7 +45,7 @@ const (
 	ElementSynergyBonus    = 0.20 // +20% bonus during synergy
 
 	// Ascension Sigil - damage requirement to climb floors
-	SigilBaseDamage    = 200.0 // Base damage required for floor 1 (before exponent/factor)
+	SigilBaseDamage    = 200.0 // Base damage used in sigil requirement formula (floor 1 baseline)
 	SigilScaleExponent = 1.6   // Scaling per floor (tuned to stay relevant vs mana costs)
 	SigilFloorFactor   = 1.0   // Multiplier to tune overall gate strength
 
