@@ -87,7 +87,8 @@ DEBUG=false
 - **Mana Generation:** Earn mana passively based on your current floor
 - **Floor Climbing:** Spend mana to ascend to higher floors (cost scales exponentially)
 - **Spells:** Unlock and cast 12 unique spells across 4 elements (Fire, Ice, Thunder, Arcane)
-- **Auto-Cast:** Toggle automatic spell casting for hands-free progression
+- **Auto-Cast:** Automatic spell casting that consumes mana (base cost); manual casts cost +10% more but give you control
+- **Mana Economy:** Spells compete for your mana pool—you can't auto-cast everything at once!
 - **Rituals:** Combine 3 spells for +15% mana generation per ritual
 - **Prestige:** Reset at floor 100 for permanent multipliers and bonuses
 - **Offline Progress:** Earn mana even while away (50% efficiency)

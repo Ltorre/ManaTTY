@@ -2,14 +2,14 @@ package models
 
 // Ritual represents a 3-spell combination that boosts mana generation.
 type Ritual struct {
-	ID              string   `bson:"id" json:"id"`
-	Name            string   `bson:"name" json:"name"`
-	SpellIDs        []string `bson:"spell_ids" json:"spell_ids"`
-	IsActive        bool     `bson:"is_active" json:"is_active"`
-	CooldownMs      int64    `bson:"cooldown_ms" json:"cooldown_ms"`
-	CooldownRemaining int64  `bson:"cooldown_remaining" json:"cooldown_remaining"`
-	BoostMultiplier float64  `bson:"boost_multiplier" json:"boost_multiplier"`
-	CastCount       int      `bson:"cast_count" json:"cast_count"`
+	ID                string   `bson:"id" json:"id"`
+	Name              string   `bson:"name" json:"name"`
+	SpellIDs          []string `bson:"spell_ids" json:"spell_ids"`
+	IsActive          bool     `bson:"is_active" json:"is_active"`
+	CooldownMs        int64    `bson:"cooldown_ms" json:"cooldown_ms"`
+	CooldownRemaining int64    `bson:"cooldown_remaining" json:"cooldown_remaining"`
+	BoostMultiplier   float64  `bson:"boost_multiplier" json:"boost_multiplier"`
+	CastCount         int      `bson:"cast_count" json:"cast_count"`
 }
 
 // RitualBonus is the mana generation multiplier per active ritual.
@@ -23,19 +23,19 @@ func NewRitual(spellIDs []string) *Ritual {
 	if len(spellIDs) != 3 {
 		return nil
 	}
-	
+
 	// Generate a simple ID from spell IDs
 	id := "ritual_" + spellIDs[0] + "_" + spellIDs[1] + "_" + spellIDs[2]
-	
+
 	return &Ritual{
-		ID:              id,
-		Name:            generateRitualName(spellIDs),
-		SpellIDs:        spellIDs,
-		IsActive:        true,
-		CooldownMs:      60000, // 60 seconds
+		ID:                id,
+		Name:              generateRitualName(spellIDs),
+		SpellIDs:          spellIDs,
+		IsActive:          true,
+		CooldownMs:        60000, // 60 seconds
 		CooldownRemaining: 0,
-		BoostMultiplier: 1.0 + RitualBonus,
-		CastCount:       0,
+		BoostMultiplier:   1.0 + RitualBonus,
+		CastCount:         0,
 	}
 }
 

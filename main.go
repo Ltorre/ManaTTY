@@ -44,7 +44,7 @@ func main() {
 		db = nil
 	} else {
 		utils.Info("Connected to MongoDB")
-		
+
 		// Ensure indexes
 		if err := db.EnsureIndexes(ctx); err != nil {
 			utils.Warn("Failed to create indexes: %v", err)
@@ -86,7 +86,7 @@ func main() {
 
 	// Run the TUI
 	p := tea.NewProgram(model, tea.WithAltScreen())
-	
+
 	if _, err := p.Run(); err != nil {
 		utils.Error("Error running program: %v", err)
 		os.Exit(1)
@@ -111,7 +111,7 @@ func initializeGame(ctx context.Context, db *storage.Database) (*models.GameStat
 		players, err := playerRepo.List(ctx, 1, 0)
 		if err == nil && len(players) > 0 {
 			player := players[0]
-			
+
 			// Load their latest save
 			gameState, err := saveRepo.LoadLatest(ctx, player.UUID)
 			if err == nil {
@@ -123,12 +123,12 @@ func initializeGame(ctx context.Context, db *storage.Database) (*models.GameStat
 
 	// Create new game
 	utils.Info("Creating new game...")
-	
+
 	playerUUID := uuid.New().String()
 	player := models.NewPlayer(playerUUID, "Wizard")
-	
+
 	gameState := models.NewGameState(playerUUID, 0)
-	
+
 	// Add starting spells
 	for _, spell := range game.GetBaseSpells() {
 		gameState.AddSpell(spell)
@@ -138,11 +138,11 @@ func initializeGame(ctx context.Context, db *storage.Database) (*models.GameStat
 	if db != nil {
 		playerRepo := storage.NewPlayerRepository(db)
 		saveRepo := storage.NewSaveRepository(db)
-		
+
 		if err := playerRepo.Create(ctx, player); err != nil {
 			utils.Warn("Failed to create player: %v", err)
 		}
-		
+
 		if err := saveRepo.Save(ctx, gameState); err != nil {
 			utils.Warn("Failed to save game: %v", err)
 		}

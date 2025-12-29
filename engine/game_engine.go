@@ -10,10 +10,10 @@ import (
 // GameEngine handles all game logic and state updates.
 type GameEngine struct {
 	// Event handlers
-	OnFloorClimbed    func(floor int)
-	OnSpellUnlocked   func(spell *models.Spell)
-	OnManaGenerated   func(amount float64)
-	OnPrestige        func(era int)
+	OnFloorClimbed  func(floor int)
+	OnSpellUnlocked func(spell *models.Spell)
+	OnManaGenerated func(amount float64)
+	OnPrestige      func(era int)
 }
 
 // NewGameEngine creates a new game engine instance.
@@ -146,11 +146,16 @@ func (e *GameEngine) UpdateRitualCooldowns(gs *models.GameState, elapsedMs int64
 	}
 }
 
-// ProcessAutoCasts automatically casts ready spells.
+// ProcessAutoCasts automatically casts ready spells if mana is available.
+// Spells are cast in order; stops when mana runs out.
 func (e *GameEngine) ProcessAutoCasts(gs *models.GameState) {
 	for _, spell := range gs.Spells {
 		if spell.IsReady() {
-			e.CastSpell(gs, spell, false)
+			// CastSpell will check mana and skip if insufficient
+			if err := e.CastSpell(gs, spell, false); err == ErrInsufficientMana {
+				// Not enough mana for this spell, continue to next (might be cheaper)
+				continue
+			}
 		}
 	}
 }

@@ -9,34 +9,33 @@ import (
 
 // Spell casting errors
 var (
-	ErrSpellOnCooldown   = errors.New("spell is on cooldown")
-	ErrInsufficientMana  = errors.New("insufficient mana")
-	ErrSpellNotFound     = errors.New("spell not found")
-	ErrSpellNotUnlocked  = errors.New("spell not unlocked")
+	ErrSpellOnCooldown  = errors.New("spell is on cooldown")
+	ErrInsufficientMana = errors.New("insufficient mana")
+	ErrSpellNotFound    = errors.New("spell not found")
+	ErrSpellNotUnlocked = errors.New("spell not unlocked")
 )
 
 // CastSpell attempts to cast a spell.
+// Both manual and auto-cast now require mana. Manual costs +10% more.
 func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual bool) error {
 	// Check cooldown
 	if !spell.IsReady() {
 		return ErrSpellOnCooldown
 	}
 
-	// Calculate mana cost (manual casts cost more)
+	// Calculate mana cost (manual casts cost more due to ManualCastPenalty)
 	manaCost := spell.BaseManaRequirement
 	if manual {
 		manaCost = game.CalculateManualCastCost(spell.BaseManaRequirement)
 	}
 
-	// Check mana (auto-cast doesn't require mana)
-	if manual && gs.Tower.CurrentMana < manaCost {
+	// Check mana - both auto and manual require mana now
+	if gs.Tower.CurrentMana < manaCost {
 		return ErrInsufficientMana
 	}
 
-	// Deduct mana for manual casts
-	if manual {
-		gs.Tower.SpendMana(manaCost)
-	}
+	// Deduct mana
+	gs.Tower.SpendMana(manaCost)
 
 	// Apply cooldown with prestige reduction
 	cooldownReduction := gs.PrestigeData.SpellCooldownReduction

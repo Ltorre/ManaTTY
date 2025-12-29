@@ -3,30 +3,30 @@ package components
 import (
 	"fmt"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/Ltorre/ManaTTY/models"
 	"github.com/Ltorre/ManaTTY/utils"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // Spell list styles
 var (
 	selectedStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#F9FAFB")).
-		Background(lipgloss.Color("#1F2937"))
+			Bold(true).
+			Foreground(lipgloss.Color("#F9FAFB")).
+			Background(lipgloss.Color("#1F2937"))
 
 	normalStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#F9FAFB"))
+			Foreground(lipgloss.Color("#F9FAFB"))
 
 	dimStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#9CA3AF"))
+			Foreground(lipgloss.Color("#9CA3AF"))
 
 	readyStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#22C55E")).
-		Bold(true)
+			Foreground(lipgloss.Color("#22C55E")).
+			Bold(true)
 
 	cooldownStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EAB308"))
+			Foreground(lipgloss.Color("#EAB308"))
 )
 
 // SpellListItem renders a single spell in a list.

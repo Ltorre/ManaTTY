@@ -23,9 +23,9 @@ var DefaultGameConstants = GameConstants{
 	MaxManaRetention:      0.90,
 
 	// Rituals
-	RitualCooldownMs:  60000,
-	MaxActiveRituals:  3,
-	SpellsPerRitual:   3,
+	RitualCooldownMs: 60000,
+	MaxActiveRituals: 3,
+	SpellsPerRitual:  3,
 
 	// Spells
 	MinSpellCooldownMs: 1000,

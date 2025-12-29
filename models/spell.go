@@ -28,9 +28,9 @@ type SpellDefinition struct {
 	UnlockedByDefault bool    `bson:"unlocked_by_default" json:"unlocked_by_default"`
 	PrestigeExclusive bool    `bson:"prestige_exclusive" json:"prestige_exclusive"`
 	Scaling           struct {
-		DamagePerLevel           float64 `bson:"damage_per_level" json:"damage_per_level"`
-		CooldownReductionPerLvl  int64   `bson:"cooldown_reduction_per_level" json:"cooldown_reduction_per_level"`
-		ManaCostReductionPerLvl  float64 `bson:"mana_cost_reduction_per_level" json:"mana_cost_reduction_per_level"`
+		DamagePerLevel          float64 `bson:"damage_per_level" json:"damage_per_level"`
+		CooldownReductionPerLvl int64   `bson:"cooldown_reduction_per_level" json:"cooldown_reduction_per_level"`
+		ManaCostReductionPerLvl float64 `bson:"mana_cost_reduction_per_level" json:"mana_cost_reduction_per_level"`
 	} `bson:"scaling" json:"scaling"`
 	Version int `bson:"version" json:"version"`
 }

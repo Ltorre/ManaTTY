@@ -9,11 +9,11 @@ import (
 
 // Ritual errors
 var (
-	ErrRitualSlotsFull     = errors.New("ritual slots are full")
-	ErrDuplicateSpells     = errors.New("ritual requires 3 unique spells")
-	ErrSpellNotOwned       = errors.New("spell not owned")
-	ErrRitualNotFound      = errors.New("ritual not found")
-	ErrInvalidSpellCount   = errors.New("ritual requires exactly 3 spells")
+	ErrRitualSlotsFull   = errors.New("ritual slots are full")
+	ErrDuplicateSpells   = errors.New("ritual requires 3 unique spells")
+	ErrSpellNotOwned     = errors.New("spell not owned")
+	ErrRitualNotFound    = errors.New("ritual not found")
+	ErrInvalidSpellCount = errors.New("ritual requires exactly 3 spells")
 )
 
 // CreateRitual creates a new ritual from 3 spells.

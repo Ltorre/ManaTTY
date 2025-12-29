@@ -6,14 +6,14 @@ import (
 
 // PrestigeData contains all prestige/ascension related data.
 type PrestigeData struct {
-	TotalAscensions            int       `bson:"total_ascensions" json:"total_ascensions"`
-	CurrentEra                 int       `bson:"current_era" json:"current_era"`
-	EraMultiplier              float64   `bson:"era_multiplier" json:"era_multiplier"`
-	PermanentManaGenMultiplier float64   `bson:"permanent_mana_gen_multiplier" json:"permanent_mana_gen_multiplier"`
-	SpellCooldownReduction     float64   `bson:"spell_cooldown_reduction" json:"spell_cooldown_reduction"`
-	ManaRetention              float64   `bson:"mana_retention" json:"mana_retention"`
-	RitualCapacity             int       `bson:"ritual_capacity" json:"ritual_capacity"`
-	UnlockedPrestigeSpells     []string  `bson:"unlocked_prestige_spells" json:"unlocked_prestige_spells"`
+	TotalAscensions            int         `bson:"total_ascensions" json:"total_ascensions"`
+	CurrentEra                 int         `bson:"current_era" json:"current_era"`
+	EraMultiplier              float64     `bson:"era_multiplier" json:"era_multiplier"`
+	PermanentManaGenMultiplier float64     `bson:"permanent_mana_gen_multiplier" json:"permanent_mana_gen_multiplier"`
+	SpellCooldownReduction     float64     `bson:"spell_cooldown_reduction" json:"spell_cooldown_reduction"`
+	ManaRetention              float64     `bson:"mana_retention" json:"mana_retention"`
+	RitualCapacity             int         `bson:"ritual_capacity" json:"ritual_capacity"`
+	UnlockedPrestigeSpells     []string    `bson:"unlocked_prestige_spells" json:"unlocked_prestige_spells"`
 	PrestigeEvents             []time.Time `bson:"prestige_events" json:"prestige_events"`
 }
 
@@ -56,33 +56,33 @@ func (p *PrestigeData) CanPrestige(currentFloor int) bool {
 func (p *PrestigeData) ProcessPrestige() {
 	p.TotalAscensions++
 	p.CurrentEra++
-	
+
 	// Update era multiplier
 	p.EraMultiplier = 1.0 + (EraMultiplierBonus * float64(p.CurrentEra))
-	
+
 	// Add permanent bonuses
 	p.PermanentManaGenMultiplier += PrestigeManaGenBonus
 	p.SpellCooldownReduction += PrestigeCooldownBonus
 	p.ManaRetention += PrestigeManaRetentionBonus
-	
+
 	// Cap cooldown reduction at 50%
 	if p.SpellCooldownReduction > 0.50 {
 		p.SpellCooldownReduction = 0.50
 	}
-	
+
 	// Cap mana retention at 90%
 	if p.ManaRetention > 0.90 {
 		p.ManaRetention = 0.90
 	}
-	
+
 	// Unlock ritual slot (max 3)
 	if p.RitualCapacity < MaxActiveRituals {
 		p.RitualCapacity++
 	}
-	
+
 	// Record prestige event
 	p.PrestigeEvents = append(p.PrestigeEvents, time.Now())
-	
+
 	// Unlock prestige-exclusive spells based on era
 	if p.CurrentEra == 3 && !contains(p.UnlockedPrestigeSpells, "spell_meteor_strike") {
 		p.UnlockedPrestigeSpells = append(p.UnlockedPrestigeSpells, "spell_meteor_strike")

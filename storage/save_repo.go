@@ -63,7 +63,7 @@ func (r *SaveRepository) Load(ctx context.Context, playerUUID string, slot int) 
 // LoadLatest loads the most recently saved game for a player.
 func (r *SaveRepository) LoadLatest(ctx context.Context, playerUUID string) (*models.GameState, error) {
 	var save models.GameState
-	
+
 	opts := options.FindOne().SetSort(bson.D{{Key: "saved_at", Value: -1}})
 	filter := bson.M{"player_uuid": playerUUID}
 

@@ -14,17 +14,17 @@ const (
 	DatabaseName = "mage_tower"
 
 	// Collection names
-	CollectionPlayers     = "players"
-	CollectionGameSaves   = "game_saves"
-	CollectionSpellDefs   = "spell_definitions"
+	CollectionPlayers   = "players"
+	CollectionGameSaves = "game_saves"
+	CollectionSpellDefs = "spell_definitions"
 )
 
 // Database holds the MongoDB client and database reference.
 type Database struct {
-	Client   *mongo.Client
-	DB       *mongo.Database
-	Players  *mongo.Collection
-	Saves    *mongo.Collection
+	Client    *mongo.Client
+	DB        *mongo.Database
+	Players   *mongo.Collection
+	Saves     *mongo.Collection
 	SpellDefs *mongo.Collection
 }
 

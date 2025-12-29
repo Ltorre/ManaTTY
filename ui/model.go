@@ -3,10 +3,10 @@ package ui
 import (
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/Ltorre/ManaTTY/engine"
 	"github.com/Ltorre/ManaTTY/models"
 	"github.com/Ltorre/ManaTTY/storage"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 // ViewType represents the current screen being displayed.

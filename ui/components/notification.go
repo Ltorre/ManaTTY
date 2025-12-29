@@ -27,20 +27,20 @@ type Notification struct {
 // Notification styles
 var (
 	infoStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#3B82F6")).
-		Bold(true)
+			Foreground(lipgloss.Color("#3B82F6")).
+			Bold(true)
 
 	successStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#22C55E")).
-		Bold(true)
+			Foreground(lipgloss.Color("#22C55E")).
+			Bold(true)
 
 	warningStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EAB308")).
-		Bold(true)
+			Foreground(lipgloss.Color("#EAB308")).
+			Bold(true)
 
 	errorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EF4444")).
-		Bold(true)
+			Foreground(lipgloss.Color("#EF4444")).
+			Bold(true)
 )
 
 // NewNotification creates a new notification.

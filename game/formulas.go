@@ -108,12 +108,12 @@ func CanPrestige(currentFloor int) bool {
 
 // CalculatePrestigeBonuses returns the bonuses gained from a prestige.
 type PrestigeBonuses struct {
-	NewEra              int
-	NewEraMultiplier    float64
-	AddedManaGen        float64
-	AddedCooldownRedux  float64
-	AddedManaRetention  float64
-	NewRitualCapacity   int
+	NewEra             int
+	NewEraMultiplier   float64
+	AddedManaGen       float64
+	AddedCooldownRedux float64
+	AddedManaRetention float64
+	NewRitualCapacity  int
 }
 
 // GetPrestigeBonuses calculates what bonuses will be gained from prestiging.
@@ -125,11 +125,11 @@ func GetPrestigeBonuses(currentEra int, currentRitualCap int) PrestigeBonuses {
 	}
 
 	return PrestigeBonuses{
-		NewEra:              newEra,
-		NewEraMultiplier:    CalculateEraMultiplier(newEra),
-		AddedManaGen:        PrestigeManaGenBonus,
-		AddedCooldownRedux:  PrestigeCooldownBonus,
-		AddedManaRetention:  PrestigeManaRetention,
-		NewRitualCapacity:   newCap,
+		NewEra:             newEra,
+		NewEraMultiplier:   CalculateEraMultiplier(newEra),
+		AddedManaGen:       PrestigeManaGenBonus,
+		AddedCooldownRedux: PrestigeCooldownBonus,
+		AddedManaRetention: PrestigeManaRetention,
+		NewRitualCapacity:  newCap,
 	}
 }

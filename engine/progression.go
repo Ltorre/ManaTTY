@@ -70,41 +70,41 @@ func (e *GameEngine) GetRitualBonus(gs *models.GameState) float64 {
 // GetProgressStats returns comprehensive progression statistics.
 func (e *GameEngine) GetProgressStats(gs *models.GameState) ProgressStats {
 	return ProgressStats{
-		CurrentFloor:        gs.Tower.CurrentFloor,
-		MaxFloorReached:     gs.Tower.MaxFloorReached,
-		CurrentMana:         gs.Tower.CurrentMana,
-		ManaToNextFloor:     e.GetManaToNextFloor(gs),
-		FloorProgress:       e.GetFloorProgress(gs),
-		ManaPerSecond:       e.CalculateManaPerSecond(gs),
-		LifetimeMana:        gs.Tower.LifetimeManaEarned,
-		TotalSpells:         len(gs.Spells),
-		ActiveRituals:       len(gs.GetActiveRituals()),
-		CurrentEra:          gs.PrestigeData.CurrentEra,
-		TotalAscensions:     gs.PrestigeData.TotalAscensions,
-		EraMultiplier:       e.GetEraMultiplier(gs),
-		TotalMultiplier:     e.GetTotalMultiplier(gs),
-		RitualBonus:         e.GetRitualBonus(gs),
-		CanPrestige:         e.CanPrestige(gs),
-		TimeToNextFloor:     e.GetTimeToNextFloor(gs),
+		CurrentFloor:    gs.Tower.CurrentFloor,
+		MaxFloorReached: gs.Tower.MaxFloorReached,
+		CurrentMana:     gs.Tower.CurrentMana,
+		ManaToNextFloor: e.GetManaToNextFloor(gs),
+		FloorProgress:   e.GetFloorProgress(gs),
+		ManaPerSecond:   e.CalculateManaPerSecond(gs),
+		LifetimeMana:    gs.Tower.LifetimeManaEarned,
+		TotalSpells:     len(gs.Spells),
+		ActiveRituals:   len(gs.GetActiveRituals()),
+		CurrentEra:      gs.PrestigeData.CurrentEra,
+		TotalAscensions: gs.PrestigeData.TotalAscensions,
+		EraMultiplier:   e.GetEraMultiplier(gs),
+		TotalMultiplier: e.GetTotalMultiplier(gs),
+		RitualBonus:     e.GetRitualBonus(gs),
+		CanPrestige:     e.CanPrestige(gs),
+		TimeToNextFloor: e.GetTimeToNextFloor(gs),
 	}
 }
 
 // ProgressStats holds comprehensive progression data.
 type ProgressStats struct {
-	CurrentFloor        int
-	MaxFloorReached     int
-	CurrentMana         float64
-	ManaToNextFloor     float64
-	FloorProgress       float64
-	ManaPerSecond       float64
-	LifetimeMana        float64
-	TotalSpells         int
-	ActiveRituals       int
-	CurrentEra          int
-	TotalAscensions     int
-	EraMultiplier       float64
-	TotalMultiplier     float64
-	RitualBonus         float64
-	CanPrestige         bool
-	TimeToNextFloor     interface{}
+	CurrentFloor    int
+	MaxFloorReached int
+	CurrentMana     float64
+	ManaToNextFloor float64
+	FloorProgress   float64
+	ManaPerSecond   float64
+	LifetimeMana    float64
+	TotalSpells     int
+	ActiveRituals   int
+	CurrentEra      int
+	TotalAscensions int
+	EraMultiplier   float64
+	TotalMultiplier float64
+	RitualBonus     float64
+	CanPrestige     bool
+	TimeToNextFloor interface{}
 }

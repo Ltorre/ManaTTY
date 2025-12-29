@@ -8,19 +8,19 @@ import (
 
 // GameState represents the complete state of a game save.
 type GameState struct {
-	ID               primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	PlayerUUID       string             `bson:"player_uuid" json:"player_uuid"`
-	Slot             int                `bson:"slot" json:"slot"`
-	Tower            *TowerState        `bson:"tower" json:"tower"`
-	Spells           []*Spell           `bson:"spells" json:"spells"`
-	UnlockedSpellIDs []string           `bson:"unlocked_spell_ids" json:"unlocked_spell_ids"`
-	Rituals          []*Ritual          `bson:"rituals" json:"rituals"`
-	ActiveRitualCount int               `bson:"active_ritual_count" json:"active_ritual_count"`
-	PassiveBonuses   *PassiveBonuses    `bson:"passive_bonuses" json:"passive_bonuses"`
-	PrestigeData     *PrestigeData      `bson:"prestige" json:"prestige"`
-	Session          *SessionData       `bson:"session" json:"session"`
-	SavedAt          time.Time          `bson:"saved_at" json:"saved_at"`
-	Version          int                `bson:"version" json:"version"`
+	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	PlayerUUID        string             `bson:"player_uuid" json:"player_uuid"`
+	Slot              int                `bson:"slot" json:"slot"`
+	Tower             *TowerState        `bson:"tower" json:"tower"`
+	Spells            []*Spell           `bson:"spells" json:"spells"`
+	UnlockedSpellIDs  []string           `bson:"unlocked_spell_ids" json:"unlocked_spell_ids"`
+	Rituals           []*Ritual          `bson:"rituals" json:"rituals"`
+	ActiveRitualCount int                `bson:"active_ritual_count" json:"active_ritual_count"`
+	PassiveBonuses    *PassiveBonuses    `bson:"passive_bonuses" json:"passive_bonuses"`
+	PrestigeData      *PrestigeData      `bson:"prestige" json:"prestige"`
+	Session           *SessionData       `bson:"session" json:"session"`
+	SavedAt           time.Time          `bson:"saved_at" json:"saved_at"`
+	Version           int                `bson:"version" json:"version"`
 }
 
 // PassiveBonuses contains modifiers that affect gameplay.
@@ -44,18 +44,18 @@ type SessionData struct {
 func NewGameState(playerUUID string, slot int) *GameState {
 	now := time.Now()
 	return &GameState{
-		PlayerUUID:       playerUUID,
-		Slot:             slot,
-		Tower:            NewTowerState(),
-		Spells:           []*Spell{},
-		UnlockedSpellIDs: []string{},
-		Rituals:          []*Ritual{},
+		PlayerUUID:        playerUUID,
+		Slot:              slot,
+		Tower:             NewTowerState(),
+		Spells:            []*Spell{},
+		UnlockedSpellIDs:  []string{},
+		Rituals:           []*Ritual{},
 		ActiveRitualCount: 0,
-		PassiveBonuses:   NewPassiveBonuses(),
-		PrestigeData:     NewPrestigeData(),
-		Session:          NewSessionData(),
-		SavedAt:          now,
-		Version:          1,
+		PassiveBonuses:    NewPassiveBonuses(),
+		PrestigeData:      NewPrestigeData(),
+		Session:           NewSessionData(),
+		SavedAt:           now,
+		Version:           1,
 	}
 }
 
@@ -137,21 +137,21 @@ func (gs *GameState) UpdateSession() {
 func (gs *GameState) ResetForPrestige(baseSpells []*Spell) {
 	// Process prestige bonuses first
 	gs.PrestigeData.ProcessPrestige()
-	
+
 	// Reset tower
 	gs.Tower.Reset()
-	
+
 	// Reset to base spells only
 	gs.Spells = baseSpells
 	gs.UnlockedSpellIDs = make([]string, len(baseSpells))
 	for i, s := range baseSpells {
 		gs.UnlockedSpellIDs[i] = s.ID
 	}
-	
+
 	// Clear rituals
 	gs.Rituals = []*Ritual{}
 	gs.ActiveRitualCount = 0
-	
+
 	// Update passive bonuses from prestige
 	gs.PassiveBonuses.ManaGenMultiplier = gs.PrestigeData.PermanentManaGenMultiplier
 	gs.PassiveBonuses.SpellCooldownReduction = gs.PrestigeData.SpellCooldownReduction

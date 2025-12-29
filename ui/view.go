@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/Ltorre/ManaTTY/utils"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // View renders the current view.
@@ -89,7 +89,7 @@ func (m Model) viewTower() string {
 	filled := int(progress * float64(barWidth))
 	bar := ProgressBarFilled.Render(strings.Repeat("█", filled)) +
 		ProgressBarEmpty.Render(strings.Repeat("░", barWidth-filled))
-	
+
 	percentage := int(progress * 100)
 	manaStr := fmt.Sprintf("[%s] %d%% (%s / %s)",
 		bar,
@@ -103,17 +103,17 @@ func (m Model) viewTower() string {
 	// Stats section
 	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
 	lines = append(lines, SubtitleStyle.Render("📊 STATS"))
-	
+
 	if m.engine != nil {
 		manaPerSec := m.engine.CalculateManaPerSecond(gs)
 		multiplier := m.engine.GetTotalMultiplier(gs)
-		
+
 		lines = append(lines, fmt.Sprintf("  Mana/sec:    %s (%sx multiplier)",
 			HighlightStyle.Render(utils.FormatNumber(manaPerSec)),
 			utils.FormatMultiplier(multiplier),
 		))
 	}
-	
+
 	lines = append(lines, fmt.Sprintf("  Total earned: %s",
 		utils.FormatNumber(gs.Tower.LifetimeManaEarned),
 	))
@@ -136,7 +136,7 @@ func (m Model) viewTower() string {
 	activeRituals := gs.GetActiveRituals()
 	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("🔥 ACTIVE RITUALS (%d/%d)",
 		len(activeRituals), gs.PrestigeData.RitualCapacity)))
-	
+
 	if len(activeRituals) == 0 {
 		lines = append(lines, DimStyle.Render("  No active rituals"))
 	} else {
@@ -195,7 +195,7 @@ func (m Model) viewSpells() string {
 	for i, spell := range m.gameState.Spells {
 		selected := i == m.selectedIndex
 		icon := GetElementIcon(string(spell.Element))
-		
+
 		prefix := "  "
 		if selected {
 			prefix = "> "
@@ -209,7 +209,7 @@ func (m Model) viewSpells() string {
 
 		line := fmt.Sprintf("%s%s %s (Lv%d) - %s",
 			prefix, icon, spell.Name, spell.Level, status)
-		
+
 		if selected {
 			lines = append(lines, SelectedStyle.Render(line))
 		} else {
@@ -262,7 +262,7 @@ func (m Model) viewRituals() string {
 	// Active rituals
 	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("Active Rituals (%d/%d)",
 		len(m.gameState.GetActiveRituals()), m.gameState.PrestigeData.RitualCapacity)))
-	
+
 	for _, ritual := range m.gameState.Rituals {
 		status := "Active"
 		if !ritual.IsActive {
@@ -279,7 +279,7 @@ func (m Model) viewRituals() string {
 	// Ritual builder
 	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
 	lines = append(lines, SubtitleStyle.Render("Create New Ritual (select 3 spells)"))
-	
+
 	// Show selected spells
 	lines = append(lines, fmt.Sprintf("Selected: %d/3", len(m.ritualSpells)))
 	for _, spellID := range m.ritualSpells {
@@ -294,7 +294,7 @@ func (m Model) viewRituals() string {
 	lines = append(lines, DimStyle.Render("Available spells:"))
 	for i, spell := range m.gameState.Spells {
 		selected := i == m.selectedIndex
-		
+
 		// Check if already in ritual selection
 		inSelection := false
 		for _, id := range m.ritualSpells {
@@ -314,7 +314,7 @@ func (m Model) viewRituals() string {
 
 		icon := GetElementIcon(string(spell.Element))
 		line := fmt.Sprintf("%s%s %s", prefix, icon, spell.Name)
-		
+
 		if selected {
 			lines = append(lines, SelectedStyle.Render(line))
 		} else if inSelection {
@@ -416,7 +416,7 @@ func (m Model) viewPrestige() string {
 		lines = append(lines, TextStyle.Render("  • Remove all rituals"))
 		lines = append(lines, "")
 		lines = append(lines, HighlightStyle.Render("But you will gain:"))
-		
+
 		newEra := gs.PrestigeData.CurrentEra + 1
 		newMultiplier := 1.0 + (0.15 * float64(newEra))
 		lines = append(lines, fmt.Sprintf("  • Era %d (%.2fx multiplier)", newEra, newMultiplier))

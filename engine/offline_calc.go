@@ -31,9 +31,9 @@ func (e *GameEngine) CalculateOfflineProgress(gs *models.GameState) *OfflineProg
 	// Skip if minimal offline time
 	if offlineSeconds < float64(game.MinOfflineSeconds) {
 		return &OfflineProgress{
-			TimeOffline:   timeOffline,
-			FinalFloor:    gs.Tower.CurrentFloor,
-			FinalMana:     gs.Tower.CurrentMana,
+			TimeOffline: timeOffline,
+			FinalFloor:  gs.Tower.CurrentFloor,
+			FinalMana:   gs.Tower.CurrentMana,
 		}
 	}
 
@@ -55,7 +55,7 @@ func (e *GameEngine) CalculateOfflineProgress(gs *models.GameState) *OfflineProg
 
 	for e.TryClimbFloor(gs) {
 		floorsClimbed++
-		
+
 		// Track any spells unlocked
 		newSpells := game.GetNewSpellsAtFloor(gs.Tower.CurrentFloor)
 		for _, spell := range newSpells {
