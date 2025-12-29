@@ -146,14 +146,15 @@ func (e *GameEngine) UpdateRitualCooldowns(gs *models.GameState, elapsedMs int64
 	}
 }
 
-// ProcessAutoCasts automatically casts ready spells if mana is available.
-// Spells are cast in order; stops when mana runs out.
+// ProcessAutoCasts automatically casts spells in auto-cast slots if mana is available.
+// Only spells assigned to auto-cast slots will be cast automatically.
 func (e *GameEngine) ProcessAutoCasts(gs *models.GameState) {
-	for _, spell := range gs.Spells {
-		if spell.IsReady() {
+	for _, spellID := range gs.Session.AutoCastSlots {
+		spell := gs.GetSpellByID(spellID)
+		if spell != nil && spell.IsReady() {
 			// CastSpell will check mana and skip if insufficient
 			if err := e.CastSpell(gs, spell, false); err == ErrInsufficientMana {
-				// Not enough mana for this spell, continue to next (might be cheaper)
+				// Not enough mana, continue to next slot
 				continue
 			}
 		}
