@@ -191,6 +191,17 @@ func (m Model) viewSpells() string {
 	lines = append(lines, header)
 	lines = append(lines, "")
 
+	// Auto-cast slots header
+	usedSlots := len(m.gameState.Session.AutoCastSlots)
+	maxSlots := m.gameState.GetAutoCastSlotCount()
+	autoCastStatus := "OFF"
+	if m.gameState.Session.AutoCastEnabled {
+		autoCastStatus = "ON"
+	}
+	lines = append(lines, HighlightStyle.Render(fmt.Sprintf("Auto-Cast: %s | Slots: %d/%d", autoCastStatus, usedSlots, maxSlots)))
+	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+	lines = append(lines, "")
+
 	// Spell list
 	for i, spell := range m.gameState.Spells {
 		selected := i == m.selectedIndex
@@ -201,29 +212,41 @@ func (m Model) viewSpells() string {
 			prefix = "> "
 		}
 
+		// Auto-cast indicator
+		autoIndicator := "  "
+		if m.gameState.IsSpellInAutoCast(spell.ID) {
+			autoIndicator = "⚡"
+		}
+
 		// Status
 		status := SuccessStyle.Render("Ready!")
 		if !spell.IsReady() {
 			status = WarningStyle.Render(utils.FormatCooldown(spell.CooldownRemainingMs))
 		}
 
-		line := fmt.Sprintf("%s%s %s (Lv%d) - %s",
-			prefix, icon, spell.Name, spell.Level, status)
+		line := fmt.Sprintf("%s%s %s %s (Lv%d) - %s",
+			prefix, autoIndicator, icon, spell.Name, spell.Level, status)
 
 		if selected {
 			lines = append(lines, SelectedStyle.Render(line))
+		} else if m.gameState.IsSpellInAutoCast(spell.ID) {
+			lines = append(lines, HighlightStyle.Render(line))
 		} else {
 			lines = append(lines, TextStyle.Render(line))
 		}
 
 		// Show details for selected spell
 		if selected {
+			inSlot := "No"
+			if m.gameState.IsSpellInAutoCast(spell.ID) {
+				inSlot = "Yes"
+			}
 			details := DimStyle.Render(fmt.Sprintf(
-				"      Element: %s | Cooldown: %s | Mana: %.0f | Casts: %d",
+				"      Element: %s | Cooldown: %s | Mana: %.0f | Auto: %s",
 				spell.Element,
 				utils.FormatMilliseconds(spell.BaseCooldownMs),
 				spell.BaseManaRequirement,
-				spell.CastCount,
+				inSlot,
 			))
 			lines = append(lines, details)
 		}
@@ -231,16 +254,8 @@ func (m Model) viewSpells() string {
 
 	lines = append(lines, "")
 
-	// Auto-cast status
-	autoCast := "ON"
-	if !m.gameState.Session.AutoCastEnabled {
-		autoCast = "OFF"
-	}
-	lines = append(lines, DimStyle.Render(fmt.Sprintf("Auto-cast: %s", autoCast)))
-	lines = append(lines, "")
-
 	// Footer
-	lines = append(lines, FooterStyle.Render("[↑↓] Navigate  [Enter] Cast  [A] Toggle Auto-cast  [B/Esc] Back"))
+	lines = append(lines, FooterStyle.Render("[↑↓] Navigate  [Enter] Cast  [Space] Toggle Auto-slot  [A] Auto On/Off  [B] Back"))
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
@@ -372,6 +387,7 @@ func (m Model) viewStats() string {
 	lines = append(lines, fmt.Sprintf("  Total Ascensions: %d", gs.PrestigeData.TotalAscensions))
 	lines = append(lines, fmt.Sprintf("  Cooldown Reduction: %s", utils.FormatPercent(gs.PrestigeData.SpellCooldownReduction)))
 	lines = append(lines, fmt.Sprintf("  Ritual Capacity: %d", gs.PrestigeData.RitualCapacity))
+	lines = append(lines, fmt.Sprintf("  Auto-Cast Slots: %d (base 2 + %d bonus)", gs.GetAutoCastSlotCount(), gs.PrestigeData.AutoCastSlotBonus))
 	lines = append(lines, "")
 
 	// Spell stats
@@ -424,6 +440,9 @@ func (m Model) viewPrestige() string {
 		lines = append(lines, "  • +5% spell cooldown reduction")
 		if gs.PrestigeData.RitualCapacity < 3 {
 			lines = append(lines, "  • +1 ritual slot")
+		}
+		if gs.PrestigeData.AutoCastSlotBonus < 2 {
+			lines = append(lines, "  • +1 auto-cast slot")
 		}
 		lines = append(lines, "")
 		lines = append(lines, WarningStyle.Render("Press [Enter] to ascend"))

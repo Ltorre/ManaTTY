@@ -13,6 +13,7 @@ type PrestigeData struct {
 	SpellCooldownReduction     float64     `bson:"spell_cooldown_reduction" json:"spell_cooldown_reduction"`
 	ManaRetention              float64     `bson:"mana_retention" json:"mana_retention"`
 	RitualCapacity             int         `bson:"ritual_capacity" json:"ritual_capacity"`
+	AutoCastSlotBonus          int         `bson:"auto_cast_slot_bonus" json:"auto_cast_slot_bonus"` // Extra auto-cast slots from prestige
 	UnlockedPrestigeSpells     []string    `bson:"unlocked_prestige_spells" json:"unlocked_prestige_spells"`
 	PrestigeEvents             []time.Time `bson:"prestige_events" json:"prestige_events"`
 }
@@ -42,6 +43,7 @@ func NewPrestigeData() *PrestigeData {
 		SpellCooldownReduction:     0.0,
 		ManaRetention:              0.0,
 		RitualCapacity:             1,
+		AutoCastSlotBonus:          0,
 		UnlockedPrestigeSpells:     []string{},
 		PrestigeEvents:             []time.Time{},
 	}
@@ -78,6 +80,11 @@ func (p *PrestigeData) ProcessPrestige() {
 	// Unlock ritual slot (max 3)
 	if p.RitualCapacity < MaxActiveRituals {
 		p.RitualCapacity++
+	}
+
+	// Unlock auto-cast slot (max +2 bonus = 4 total)
+	if p.AutoCastSlotBonus < 2 {
+		p.AutoCastSlotBonus++
 	}
 
 	// Record prestige event
