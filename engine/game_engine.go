@@ -37,8 +37,11 @@ func (e *GameEngine) Tick(gs *models.GameState, elapsed time.Duration) {
 		e.OnManaGenerated(manaGenerated)
 	}
 
-	// Update floor mana requirement
+	// Update floor requirements (mana and sigil)
 	gs.Tower.MaxMana = game.CalculateFloorCost(gs.Tower.CurrentFloor)
+	if gs.Tower.SigilRequired <= 0 {
+		gs.Tower.SigilRequired = game.CalculateSigilRequired(gs.Tower.CurrentFloor)
+	}
 
 	// Try to climb floors
 	for e.TryClimbFloor(gs) {
@@ -76,7 +79,13 @@ func (e *GameEngine) CalculateManaPerSecond(gs *models.GameState) float64 {
 }
 
 // TryClimbFloor attempts to climb to the next floor.
+// Requires both sufficient mana AND a charged Ascension Sigil.
 func (e *GameEngine) TryClimbFloor(gs *models.GameState) bool {
+	// Check sigil requirement first
+	if !gs.Tower.IsSigilCharged() {
+		return false
+	}
+
 	requiredMana := game.CalculateFloorCost(gs.Tower.CurrentFloor)
 
 	if gs.Tower.CurrentMana >= requiredMana {
@@ -84,8 +93,9 @@ func (e *GameEngine) TryClimbFloor(gs *models.GameState) bool {
 		gs.Tower.SpendMana(requiredMana)
 		gs.Tower.ClimbFloor()
 
-		// Update the new mana requirement
+		// Update the new requirements for next floor
 		gs.Tower.MaxMana = game.CalculateFloorCost(gs.Tower.CurrentFloor)
+		gs.Tower.SigilRequired = game.CalculateSigilRequired(gs.Tower.CurrentFloor)
 
 		// Check for spell unlocks
 		e.CheckSpellUnlocks(gs)
