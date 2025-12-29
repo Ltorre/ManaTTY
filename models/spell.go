@@ -139,7 +139,11 @@ func (s *Spell) CanLevelUp(maxLevel int) bool {
 }
 
 // LevelUp increases the spell level by 1.
-func (s *Spell) LevelUp() bool {
+// Returns false if already at or above maxLevel (currently SpellMaxLevel=10).
+func (s *Spell) LevelUp(maxLevel int) bool {
+	if s.Level >= maxLevel {
+		return false
+	}
 	s.Level++
 	return true
 }

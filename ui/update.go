@@ -165,10 +165,11 @@ func (m Model) handleSpellsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			if err := m.engine.CastSpell(m.gameState, spell, true); err != nil {
 				m.ShowNotification(err.Error())
 			} else {
-				m.ShowNotification(spell.Name + " cast!")
-				// Check for synergy activation
+				// Check for synergy activation and combine notification
 				if m.gameState.HasActiveSynergy() {
-					m.ShowNotification(string(m.gameState.GetActiveSynergy()) + " SYNERGY!")
+					m.ShowNotification(fmt.Sprintf("%s cast! %s SYNERGY!", spell.Name, string(m.gameState.GetActiveSynergy())))
+				} else {
+					m.ShowNotification(fmt.Sprintf("%s cast!", spell.Name))
 				}
 			}
 		}
@@ -192,7 +193,7 @@ func (m Model) handleSpellsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			if err := m.engine.UpgradeSpell(m.gameState, spell); err != nil {
 				m.ShowNotification(err.Error())
 			} else {
-				m.ShowNotification(spell.Name + " upgraded to Lv" + fmt.Sprintf("%d", spell.Level) + "!")
+				m.ShowNotification(fmt.Sprintf("%s upgraded to Lv%d!", spell.Name, spell.Level))
 			}
 		}
 	case "<", ",":
@@ -200,7 +201,11 @@ func (m Model) handleSpellsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.gameState != nil && m.engine != nil && m.selectedIndex < len(m.gameState.Spells) {
 			spell := m.gameState.Spells[m.selectedIndex]
 			if m.engine.MoveAutoCastSlotUp(m.gameState, spell.ID) {
-				m.ShowNotification(spell.Name + " priority increased")
+				m.ShowNotification(fmt.Sprintf("%s priority increased", spell.Name))
+			} else if !m.gameState.IsSpellInAutoCast(spell.ID) {
+				m.ShowNotification(fmt.Sprintf("%s not in auto-cast slot", spell.Name))
+			} else {
+				m.ShowNotification(fmt.Sprintf("%s already at top priority", spell.Name))
 			}
 		}
 	case ">", ".":
@@ -208,7 +213,11 @@ func (m Model) handleSpellsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.gameState != nil && m.engine != nil && m.selectedIndex < len(m.gameState.Spells) {
 			spell := m.gameState.Spells[m.selectedIndex]
 			if m.engine.MoveAutoCastSlotDown(m.gameState, spell.ID) {
-				m.ShowNotification(spell.Name + " priority decreased")
+				m.ShowNotification(fmt.Sprintf("%s priority decreased", spell.Name))
+			} else if !m.gameState.IsSpellInAutoCast(spell.ID) {
+				m.ShowNotification(fmt.Sprintf("%s not in auto-cast slot", spell.Name))
+			} else {
+				m.ShowNotification(fmt.Sprintf("%s already at lowest priority", spell.Name))
 			}
 		}
 	case "esc", "b":

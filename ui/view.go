@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Ltorre/ManaTTY/game"
 	"github.com/Ltorre/ManaTTY/utils"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -130,21 +131,19 @@ func (m Model) viewTower() string {
 	}
 	lines = append(lines, fmt.Sprintf("  Auto-cast: %s", autoCastStatus))
 
-	// Element synergy status (use GameState methods via m.gameState)
-	if m.gameState.HasActiveSynergy() {
-		element := m.gameState.GetActiveSynergy()
-		remaining := m.gameState.GetSynergyTimeRemaining() / 1000 // convert to seconds
+	// Element synergy status
+	if gs.HasActiveSynergy() {
+		element := gs.GetActiveSynergy()
+		remaining := gs.GetSynergyTimeRemaining() / 1000 // convert to seconds
 		synergyStr := fmt.Sprintf("  %s Synergy: %ds remaining (20%% bonus)",
 			string(element), remaining)
 		lines = append(lines, HighlightStyle.Render(synergyStr))
 	} else if len(gs.Session.LastCastElements) > 0 {
 		// Show element streak progress
 		streakLen := len(gs.Session.LastCastElements)
-		if streakLen > 0 {
-			lastElement := gs.Session.LastCastElements[streakLen-1]
-			lines = append(lines, DimStyle.Render(fmt.Sprintf("  Element streak: %s ×%d/3",
-				string(lastElement), streakLen)))
-		}
+		lastElement := gs.Session.LastCastElements[streakLen-1]
+		lines = append(lines, DimStyle.Render(fmt.Sprintf("  Element streak: %s ×%d/3",
+			string(lastElement), streakLen)))
 	}
 	lines = append(lines, "")
 
@@ -268,7 +267,7 @@ func (m Model) viewSpells() string {
 
 		// Level indicator with max check
 		levelStr := fmt.Sprintf("Lv%d", spell.Level)
-		if spell.Level >= 10 {
+		if spell.Level >= game.SpellMaxLevel {
 			levelStr = "MAX"
 		}
 
