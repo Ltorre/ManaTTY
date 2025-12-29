@@ -8,12 +8,12 @@ You are a wizard climbing a magical tower! Cast spells to earn mana/experience a
 
 ## 📋 Project Status
 
-**Current Phase:** Project Initialization
+**Current Phase:** Core Data Models
 
 ### Milestones
 
 - [x] **Milestone 1:** Project initialization & structure
-- [ ] **Milestone 2:** Core data models
+- [x] **Milestone 2:** Core data models
 - [ ] **Milestone 3:** Game constants & formulas
 - [ ] **Milestone 4:** MongoDB storage layer
 - [ ] **Milestone 5:** Game engine core

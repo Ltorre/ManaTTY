@@ -1,0 +1,159 @@
+package models
+
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+// GameState represents the complete state of a game save.
+type GameState struct {
+	ID               primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	PlayerUUID       string             `bson:"player_uuid" json:"player_uuid"`
+	Slot             int                `bson:"slot" json:"slot"`
+	Tower            *TowerState        `bson:"tower" json:"tower"`
+	Spells           []*Spell           `bson:"spells" json:"spells"`
+	UnlockedSpellIDs []string           `bson:"unlocked_spell_ids" json:"unlocked_spell_ids"`
+	Rituals          []*Ritual          `bson:"rituals" json:"rituals"`
+	ActiveRitualCount int               `bson:"active_ritual_count" json:"active_ritual_count"`
+	PassiveBonuses   *PassiveBonuses    `bson:"passive_bonuses" json:"passive_bonuses"`
+	PrestigeData     *PrestigeData      `bson:"prestige" json:"prestige"`
+	Session          *SessionData       `bson:"session" json:"session"`
+	SavedAt          time.Time          `bson:"saved_at" json:"saved_at"`
+	Version          int                `bson:"version" json:"version"`
+}
+
+// PassiveBonuses contains modifiers that affect gameplay.
+type PassiveBonuses struct {
+	ManaGenMultiplier      float64 `bson:"mana_gen_multiplier" json:"mana_gen_multiplier"`
+	FloorClimbSpeed        float64 `bson:"floor_climb_speed" json:"floor_climb_speed"`
+	SpellCooldownReduction float64 `bson:"spell_cooldown_reduction" json:"spell_cooldown_reduction"`
+	RitualCapacity         int     `bson:"ritual_capacity" json:"ritual_capacity"`
+}
+
+// SessionData contains current play session information.
+type SessionData struct {
+	SessionStartMs  int64     `bson:"session_start_ms" json:"session_start_ms"`
+	SessionDuration int64     `bson:"session_duration_ms" json:"session_duration_ms"`
+	LastTickMs      int64     `bson:"last_tick_ms" json:"last_tick_ms"`
+	LastSavedAt     time.Time `bson:"last_saved_at" json:"last_saved_at"`
+	AutoCastEnabled bool      `bson:"auto_cast_enabled" json:"auto_cast_enabled"`
+}
+
+// NewGameState creates a new game state with defaults.
+func NewGameState(playerUUID string, slot int) *GameState {
+	now := time.Now()
+	return &GameState{
+		PlayerUUID:       playerUUID,
+		Slot:             slot,
+		Tower:            NewTowerState(),
+		Spells:           []*Spell{},
+		UnlockedSpellIDs: []string{},
+		Rituals:          []*Ritual{},
+		ActiveRitualCount: 0,
+		PassiveBonuses:   NewPassiveBonuses(),
+		PrestigeData:     NewPrestigeData(),
+		Session:          NewSessionData(),
+		SavedAt:          now,
+		Version:          1,
+	}
+}
+
+// NewPassiveBonuses creates default passive bonuses.
+func NewPassiveBonuses() *PassiveBonuses {
+	return &PassiveBonuses{
+		ManaGenMultiplier:      1.0,
+		FloorClimbSpeed:        1.0,
+		SpellCooldownReduction: 0.0,
+		RitualCapacity:         1,
+	}
+}
+
+// NewSessionData creates a new session.
+func NewSessionData() *SessionData {
+	now := time.Now()
+	return &SessionData{
+		SessionStartMs:  now.UnixMilli(),
+		SessionDuration: 0,
+		LastTickMs:      now.UnixMilli(),
+		LastSavedAt:     now,
+		AutoCastEnabled: true,
+	}
+}
+
+// GetSpellByID returns a spell from the player's list by ID.
+func (gs *GameState) GetSpellByID(spellID string) *Spell {
+	for _, spell := range gs.Spells {
+		if spell.ID == spellID {
+			return spell
+		}
+	}
+	return nil
+}
+
+// HasSpell returns true if the player has unlocked a spell.
+func (gs *GameState) HasSpell(spellID string) bool {
+	for _, id := range gs.UnlockedSpellIDs {
+		if id == spellID {
+			return true
+		}
+	}
+	return false
+}
+
+// AddSpell adds a new spell to the player's collection.
+func (gs *GameState) AddSpell(spell *Spell) {
+	if !gs.HasSpell(spell.ID) {
+		gs.Spells = append(gs.Spells, spell)
+		gs.UnlockedSpellIDs = append(gs.UnlockedSpellIDs, spell.ID)
+	}
+}
+
+// GetActiveRituals returns only active rituals.
+func (gs *GameState) GetActiveRituals() []*Ritual {
+	active := []*Ritual{}
+	for _, r := range gs.Rituals {
+		if r.IsActive {
+			active = append(active, r)
+		}
+	}
+	return active
+}
+
+// CanAddRitual returns true if there's capacity for another ritual.
+func (gs *GameState) CanAddRitual() bool {
+	activeCount := len(gs.GetActiveRituals())
+	return activeCount < gs.PrestigeData.RitualCapacity
+}
+
+// UpdateSession updates session timing data.
+func (gs *GameState) UpdateSession() {
+	now := time.Now()
+	gs.Session.LastTickMs = now.UnixMilli()
+	gs.Session.SessionDuration = now.UnixMilli() - gs.Session.SessionStartMs
+}
+
+// ResetForPrestige resets appropriate data for prestige.
+func (gs *GameState) ResetForPrestige(baseSpells []*Spell) {
+	// Process prestige bonuses first
+	gs.PrestigeData.ProcessPrestige()
+	
+	// Reset tower
+	gs.Tower.Reset()
+	
+	// Reset to base spells only
+	gs.Spells = baseSpells
+	gs.UnlockedSpellIDs = make([]string, len(baseSpells))
+	for i, s := range baseSpells {
+		gs.UnlockedSpellIDs[i] = s.ID
+	}
+	
+	// Clear rituals
+	gs.Rituals = []*Ritual{}
+	gs.ActiveRitualCount = 0
+	
+	// Update passive bonuses from prestige
+	gs.PassiveBonuses.ManaGenMultiplier = gs.PrestigeData.PermanentManaGenMultiplier
+	gs.PassiveBonuses.SpellCooldownReduction = gs.PrestigeData.SpellCooldownReduction
+	gs.PassiveBonuses.RitualCapacity = gs.PrestigeData.RitualCapacity
+}
