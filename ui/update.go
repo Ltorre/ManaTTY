@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -165,6 +166,10 @@ func (m Model) handleSpellsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.ShowNotification(err.Error())
 			} else {
 				m.ShowNotification(spell.Name + " cast!")
+				// Check for synergy activation
+				if m.gameState.HasActiveSynergy() {
+					m.ShowNotification(string(m.gameState.GetActiveSynergy()) + " SYNERGY!")
+				}
 			}
 		}
 	case " ":
@@ -175,9 +180,35 @@ func (m Model) handleSpellsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			if err != nil {
 				m.ShowNotification(err.Error())
 			} else if inSlot {
-				m.ShowNotification(spell.Name + " added to auto-cast")
+				m.ShowNotification(spell.Name + " added to slot")
 			} else {
-				m.ShowNotification(spell.Name + " removed from auto-cast")
+				m.ShowNotification(spell.Name + " removed from slot")
+			}
+		}
+	case "u", "U":
+		// Upgrade selected spell
+		if m.gameState != nil && m.engine != nil && m.selectedIndex < len(m.gameState.Spells) {
+			spell := m.gameState.Spells[m.selectedIndex]
+			if err := m.engine.UpgradeSpell(m.gameState, spell); err != nil {
+				m.ShowNotification(err.Error())
+			} else {
+				m.ShowNotification(spell.Name + " upgraded to Lv" + fmt.Sprintf("%d", spell.Level) + "!")
+			}
+		}
+	case "<", ",":
+		// Move spell up in auto-cast priority
+		if m.gameState != nil && m.engine != nil && m.selectedIndex < len(m.gameState.Spells) {
+			spell := m.gameState.Spells[m.selectedIndex]
+			if m.engine.MoveAutoCastSlotUp(m.gameState, spell.ID) {
+				m.ShowNotification(spell.Name + " priority increased")
+			}
+		}
+	case ">", ".":
+		// Move spell down in auto-cast priority
+		if m.gameState != nil && m.engine != nil && m.selectedIndex < len(m.gameState.Spells) {
+			spell := m.gameState.Spells[m.selectedIndex]
+			if m.engine.MoveAutoCastSlotDown(m.gameState, spell.ID) {
+				m.ShowNotification(spell.Name + " priority decreased")
 			}
 		}
 	case "esc", "b":
@@ -298,6 +329,15 @@ func (m Model) handleTick(msg TickMsg) (tea.Model, tea.Cmd) {
 
 	// Update game state
 	m.engine.Tick(m.gameState, elapsed)
+
+	// Check for aggregated skip notifications (every 2 seconds)
+	if time.Since(m.lastSkipCheckAt) > 2*time.Second {
+		skipCount := m.engine.GetAndResetSkipCount(m.gameState)
+		if skipCount > 0 {
+			m.ShowNotification(fmt.Sprintf("Auto-cast skipped %d times (low mana)", skipCount))
+		}
+		m.lastSkipCheckAt = time.Now()
+	}
 
 	// Clear old notifications (after 3 seconds)
 	if m.notification != "" && time.Since(m.notificationTime) > 3*time.Second {
