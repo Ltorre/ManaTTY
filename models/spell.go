@@ -18,8 +18,10 @@ const (
 type SpellSpecialization string
 
 const (
+	// SpecNone represents no specialization chosen (default state)
+	SpecNone SpellSpecialization = ""
+
 	// Tier 1 specializations (unlocked at level 5)
-	SpecNone           SpellSpecialization = ""
 	SpecCritChance     SpellSpecialization = "crit_chance"     // +15% crit chance (2x damage on crit)
 	SpecManaEfficiency SpellSpecialization = "mana_efficiency" // +20% reduced mana cost
 
@@ -27,6 +29,22 @@ const (
 	SpecBurstDamage SpellSpecialization = "burst_damage" // +30% damage
 	SpecRapidCast   SpellSpecialization = "rapid_cast"   // +25% cooldown reduction
 )
+
+// SpecializationDisplayNames provides consistent display names for specializations.
+var SpecializationDisplayNames = map[SpellSpecialization]string{
+	SpecCritChance:     "Crit Chance",
+	SpecManaEfficiency: "Mana Efficiency",
+	SpecBurstDamage:    "Burst Damage",
+	SpecRapidCast:      "Rapid Cast",
+}
+
+// SpecializationShortNames provides abbreviated display names for compact UI.
+var SpecializationShortNames = map[SpellSpecialization]string{
+	SpecCritChance:     "Crit",
+	SpecManaEfficiency: "Mana-",
+	SpecBurstDamage:    "Burst",
+	SpecRapidCast:      "Rapid",
+}
 
 // SpellDefinition represents a spell template (stored in DB).
 // Note: Spell level scaling uses global constants from game/constants.go:
@@ -166,12 +184,15 @@ func (s *Spell) LevelUp(maxLevel int) bool {
 }
 
 // NeedsSpecialization returns true if spell is at a milestone level without a chosen spec.
+// Checks Tier 2 first (higher level) to ensure both tiers are properly prompted.
 func (s *Spell) NeedsSpecialization() (tier int, needs bool) {
-	if s.Level >= 5 && s.Tier1Spec == SpecNone {
-		return 1, true
-	}
+	// Check Tier 2 first (level 10) - higher priority
 	if s.Level >= 10 && s.Tier2Spec == SpecNone {
 		return 2, true
+	}
+	// Then check Tier 1 (level 5)
+	if s.Level >= 5 && s.Tier1Spec == SpecNone {
+		return 1, true
 	}
 	return 0, false
 }

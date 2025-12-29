@@ -254,23 +254,25 @@ func (m Model) viewSpells() string {
 	}
 	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("⚡ Auto-Cast Loadout [%s] (%d/%d slots)", autoCastStatus, usedSlots, maxSlots)))
 
-	condNames := map[models.AutoCastCondition]string{
-		models.ConditionAlways:        "Always",
-		models.ConditionManaAbove50:   "Mana>50%",
-		models.ConditionManaAbove75:   "Mana>75%",
-		models.ConditionSigilNotFull:  "Sigil✗",
-		models.ConditionSynergyActive: "Synergy",
+	// Determine which slot list to use (prefer new configs, fallback to legacy)
+	var slotSpellIDs []string
+	if len(m.gameState.Session.AutoCastConfigs) > 0 {
+		for _, cfg := range m.gameState.Session.AutoCastConfigs {
+			slotSpellIDs = append(slotSpellIDs, cfg.SpellID)
+		}
+	} else {
+		slotSpellIDs = m.gameState.Session.AutoCastSlots
 	}
 
-	if len(m.gameState.Session.AutoCastSlots) == 0 {
+	if len(slotSpellIDs) == 0 {
 		lines = append(lines, DimStyle.Render("  (empty - press Space on a spell to add)"))
 	} else {
-		for i, spellID := range m.gameState.Session.AutoCastSlots {
+		for i, spellID := range slotSpellIDs {
 			spell := m.gameState.GetSpellByID(spellID)
 			if spell != nil {
 				icon := GetElementIcon(string(spell.Element))
 				cond := m.gameState.GetAutoCastCondition(spellID)
-				condStr := condNames[cond]
+				condStr := models.ConditionShortNames[cond]
 				lines = append(lines, TextStyle.Render(fmt.Sprintf("  %d. %s %s (Lv%d) [%s]", i+1, icon, spell.Name, spell.Level, condStr)))
 			}
 		}
@@ -336,17 +338,11 @@ func (m Model) viewSpells() string {
 				specStr = fmt.Sprintf(" | ★ Tier %d SPEC READY!", tier)
 			} else {
 				specs := []string{}
-				specNames := map[models.SpellSpecialization]string{
-					models.SpecCritChance:     "Crit",
-					models.SpecManaEfficiency: "Mana-",
-					models.SpecBurstDamage:    "Burst",
-					models.SpecRapidCast:      "Rapid",
-				}
 				if spell.Tier1Spec != models.SpecNone {
-					specs = append(specs, specNames[spell.Tier1Spec])
+					specs = append(specs, models.SpecializationShortNames[spell.Tier1Spec])
 				}
 				if spell.Tier2Spec != models.SpecNone {
-					specs = append(specs, specNames[spell.Tier2Spec])
+					specs = append(specs, models.SpecializationShortNames[spell.Tier2Spec])
 				}
 				if len(specs) > 0 {
 					specStr = " | ★" + strings.Join(specs, ",")
