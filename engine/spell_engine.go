@@ -52,6 +52,12 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		manaCost *= (1.0 - game.ResonanceThunderManaCostReduction)
 	}
 
+	// v1.2.0: Ritual combo effect - Thunder (mana cost reduction)
+	ritualManaCostReduction := e.GetTotalRitualManaCostReduction(gs)
+	if ritualManaCostReduction > 0 {
+		manaCost *= (1.0 - ritualManaCostReduction)
+	}
+
 	// Apply synergy bonus if active and matching element
 	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
 		manaCost *= (1.0 - game.ElementSynergyBonus) // 20% cheaper
@@ -85,6 +91,9 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		cooldownReduction += game.ResonanceIceCooldownReduction
 	}
 
+	// v1.2.0: Ritual combo effect - Ice (cooldown reduction)
+	cooldownReduction += e.GetTotalRitualCooldownReduction(gs)
+
 	// Apply synergy bonus to cooldown if active
 	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
 		cooldownReduction += game.ElementSynergyBonus // Additional 20% reduction
@@ -111,6 +120,12 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		damage *= (1.0 + game.ResonanceFireDamageBonus)
 	}
 
+	// v1.2.0: Ritual combo effect - Fire (damage bonus)
+	ritualDamageBonus := e.GetTotalRitualDamageBonus(gs)
+	if ritualDamageBonus > 0 {
+		damage *= (1.0 + ritualDamageBonus)
+	}
+
 	// Apply Crit Chance specialization (15% chance for 2x damage)
 	if spell.HasSpecialization(models.SpecCritChance) {
 		if rand.Float64() < game.SpecCritChanceBonus {
@@ -127,6 +142,12 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 	sigilCharge := damage
 	if hasResonance && spell.Element == models.ElementArcane {
 		sigilCharge *= (1.0 + game.ResonanceArcaneSigilChargeBonus)
+	}
+
+	// v1.2.0: Ritual combo effect - Arcane (sigil charge bonus)
+	ritualSigilBonus := e.GetTotalRitualSigilChargeBonus(gs)
+	if ritualSigilBonus > 0 {
+		sigilCharge *= (1.0 + ritualSigilBonus)
 	}
 	// Floor-event temporary bonus: increase sigil charge rate
 	if floorBuff == models.FloorEventChoiceSigilChargeRate {

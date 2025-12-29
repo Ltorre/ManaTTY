@@ -239,8 +239,25 @@ func (m Model) viewTower() string {
 			if ritual.CooldownRemaining > 0 {
 				cooldownStr = utils.FormatCooldown(ritual.CooldownRemaining)
 			}
+
+			// Show ritual name (with signature if present)
+			ritualDisplay := ritual.Name
+			if ritual.SignatureName != "" {
+				ritualDisplay = fmt.Sprintf("%s \"%s\"", ritual.Name, ritual.SignatureName)
+			}
 			lines = append(lines, fmt.Sprintf("  [%d] %s (%s)",
-				i+1, ritual.Name, cooldownStr))
+				i+1, ritualDisplay, cooldownStr))
+
+			// Show effect summary (v1.2.0)
+			if len(ritual.Effects) > 0 {
+				effectStrs := []string{}
+				for _, effect := range ritual.Effects {
+					icon := game.GetRitualEffectIcon(effect.Type)
+					effectStr := game.GetEffectDisplayString(effect)
+					effectStrs = append(effectStrs, icon+effectStr)
+				}
+				lines = append(lines, DimStyle.Render("      "+strings.Join(effectStrs, " ")))
+			}
 		}
 	}
 	lines = append(lines, "")
@@ -445,22 +462,43 @@ func (m Model) viewRituals() string {
 
 	var lines []string
 
-	header := HeaderStyle.Width(60).Render(
+	header := HeaderStyle.Width(70).Render(
 		TitleStyle.Render("⚡ RITUALS"),
 	)
 	lines = append(lines, header)
 	lines = append(lines, "")
 
-	// Active rituals
+	// Active rituals with v1.2.0 effects
 	lines = append(lines, SubtitleStyle.Render(fmt.Sprintf("Active Rituals (%d/%d)",
 		len(m.gameState.GetActiveRituals()), m.gameState.PrestigeData.RitualCapacity)))
 
 	for _, ritual := range m.gameState.Rituals {
-		status := "Active"
+		status := SuccessStyle.Render("Active")
 		if !ritual.IsActive {
-			status = "Inactive"
+			status = DimStyle.Render("Inactive")
 		}
-		lines = append(lines, fmt.Sprintf("  • %s - %s", ritual.Name, status))
+
+		// Build ritual display with name and signature
+		ritualName := ritual.Name
+		if ritual.SignatureName != "" {
+			ritualName = fmt.Sprintf("%s \"%s\"", ritual.Name, ritual.SignatureName)
+		}
+		lines = append(lines, fmt.Sprintf("  • %s - %s", ritualName, status))
+
+		// Show ritual effects (v1.2.0)
+		if len(ritual.Effects) > 0 {
+			effectStrs := []string{}
+			for _, effect := range ritual.Effects {
+				icon := game.GetRitualEffectIcon(effect.Type)
+				effectStr := game.GetEffectDisplayString(effect)
+				effectStrs = append(effectStrs, icon+" "+effectStr)
+			}
+			effectLine := "    " + strings.Join(effectStrs, "  |  ")
+			if ritual.HasSpellEcho {
+				effectLine += " (Echo ✨)"
+			}
+			lines = append(lines, HighlightStyle.Render(effectLine))
+		}
 	}
 
 	if len(m.gameState.Rituals) == 0 {
@@ -468,16 +506,68 @@ func (m Model) viewRituals() string {
 	}
 	lines = append(lines, "")
 
+	// Total ritual bonuses summary (v1.2.0)
+	if len(m.gameState.GetActiveRituals()) > 0 && m.engine != nil {
+		lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+		lines = append(lines, SubtitleStyle.Render("Combined Bonuses"))
+
+		dmgBonus := m.engine.GetTotalRitualDamageBonus(m.gameState)
+		cdBonus := m.engine.GetTotalRitualCooldownReduction(m.gameState)
+		manaBonus := m.engine.GetTotalRitualManaCostReduction(m.gameState)
+		sigilBonus := m.engine.GetTotalRitualSigilChargeBonus(m.gameState)
+
+		bonusLines := []string{}
+		if dmgBonus > 0 {
+			bonusLines = append(bonusLines, fmt.Sprintf("🔥 +%.0f%% damage", dmgBonus*100))
+		}
+		if cdBonus > 0 {
+			bonusLines = append(bonusLines, fmt.Sprintf("❄️ -%.0f%% cooldown", cdBonus*100))
+		}
+		if manaBonus > 0 {
+			bonusLines = append(bonusLines, fmt.Sprintf("⚡ -%.0f%% mana cost", manaBonus*100))
+		}
+		if sigilBonus > 0 {
+			bonusLines = append(bonusLines, fmt.Sprintf("✨ +%.0f%% sigil charge", sigilBonus*100))
+		}
+
+		if len(bonusLines) > 0 {
+			lines = append(lines, "  "+strings.Join(bonusLines, "  |  "))
+		}
+		lines = append(lines, "")
+	}
+
 	// Ritual builder
-	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
 	lines = append(lines, SubtitleStyle.Render("Create New Ritual (select 3 spells)"))
 
-	// Show selected spells
+	// Show selected spells with preview
 	lines = append(lines, fmt.Sprintf("Selected: %d/3", len(m.ritualSpells)))
 	for _, spellID := range m.ritualSpells {
 		spell := m.gameState.GetSpellByID(spellID)
 		if spell != nil {
-			lines = append(lines, fmt.Sprintf("  ✓ %s", spell.Name))
+			icon := GetElementIcon(string(spell.Element))
+			lines = append(lines, fmt.Sprintf("  ✓ %s %s", icon, spell.Name))
+		}
+	}
+
+	// Preview ritual combo (v1.2.0)
+	if len(m.ritualSpells) == 3 {
+		comboInfo := game.ComputeRitualCombo(m.ritualSpells)
+		lines = append(lines, "")
+		previewName := comboInfo.Name
+		if comboInfo.SignatureName != "" {
+			previewName = fmt.Sprintf("%s \"%s\"", comboInfo.Name, comboInfo.SignatureName)
+		}
+		lines = append(lines, HighlightStyle.Render("  Preview: "+previewName))
+
+		effectStrs := []string{}
+		for _, effect := range comboInfo.Effects {
+			icon := game.GetRitualEffectIcon(effect.Type)
+			effectStr := game.GetEffectDisplayString(effect)
+			effectStrs = append(effectStrs, icon+" "+effectStr)
+		}
+		if len(effectStrs) > 0 {
+			lines = append(lines, SuccessStyle.Render("  Effects: "+strings.Join(effectStrs, "  |  ")))
 		}
 	}
 	lines = append(lines, "")
