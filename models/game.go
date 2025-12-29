@@ -85,6 +85,11 @@ type SessionData struct {
 
 	// Aggregated notifications
 	AutoCastSkipCount int `bson:"-" json:"-"` // Transient: skipped auto-casts this second
+
+	// Floor Events (Lightweight)
+	ActiveFloorEvent   *FloorEventState `bson:"active_floor_event,omitempty" json:"active_floor_event,omitempty"`
+	ActiveFloorBuff    *FloorEventBuff  `bson:"active_floor_buff,omitempty" json:"active_floor_buff,omitempty"`
+	LastFloorEventFloor int             `bson:"last_floor_event_floor" json:"last_floor_event_floor"`
 }
 
 // NewGameState creates a new game state with defaults.
@@ -131,6 +136,9 @@ func NewSessionData() *SessionData {
 		ActiveSynergy:      "",
 		SynergyExpiresAtMs: 0,
 		AutoCastSkipCount:  0,
+		ActiveFloorEvent:   nil,
+		ActiveFloorBuff:    nil,
+		LastFloorEventFloor: 0,
 	}
 }
 
@@ -485,4 +493,11 @@ func (gs *GameState) ResetForPrestige(baseSpells []*Spell) {
 	gs.PassiveBonuses.ManaGenMultiplier = gs.PrestigeData.PermanentManaGenMultiplier
 	gs.PassiveBonuses.SpellCooldownReduction = gs.PrestigeData.SpellCooldownReduction
 	gs.PassiveBonuses.RitualCapacity = gs.PrestigeData.RitualCapacity
+
+	// Clear transient floor-event state (floors reset)
+	if gs.Session != nil {
+		gs.Session.ActiveFloorEvent = nil
+		gs.Session.ActiveFloorBuff = nil
+		gs.Session.LastFloorEventFloor = 0
+	}
 }

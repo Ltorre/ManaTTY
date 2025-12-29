@@ -20,6 +20,7 @@ const (
 	ViewPrestige   ViewType = "prestige"
 	ViewMenu       ViewType = "menu"
 	ViewSpecialize ViewType = "specialize"
+	ViewFloorEvent ViewType = "floor_event"
 )
 
 // Model is the main Bubble Tea model for the game.

@@ -69,6 +69,11 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 	baseCooldown := game.CalculateSpellEffectiveCooldown(spell.BaseCooldownMs, spell.Level)
 	cooldownReduction := gs.PrestigeData.SpellCooldownReduction
 
+	// Floor-event temporary bonus: additional cooldown reduction
+	if gs.HasActiveFloorEventBuff(gs.Tower.CurrentFloor) && gs.Session.ActiveFloorBuff.Choice == models.FloorEventChoiceCooldownReduction {
+		cooldownReduction += game.FloorEventCooldownReduction
+	}
+
 	// Apply Rapid Cast specialization (-25% cooldown)
 	if spell.HasSpecialization(models.SpecRapidCast) {
 		cooldownReduction += game.SpecRapidCastBonus
@@ -121,6 +126,10 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 	sigilCharge := damage
 	if hasResonance && spell.Element == models.ElementArcane {
 		sigilCharge *= (1.0 + game.ResonanceArcaneSigilChargeBonus)
+	}
+	// Floor-event temporary bonus: increase sigil charge rate
+	if gs.HasActiveFloorEventBuff(gs.Tower.CurrentFloor) && gs.Session.ActiveFloorBuff.Choice == models.FloorEventChoiceSigilChargeRate {
+		sigilCharge *= (1.0 + game.FloorEventSigilChargeRateBonus)
 	}
 	gs.Tower.AddSigilCharge(sigilCharge)
 
