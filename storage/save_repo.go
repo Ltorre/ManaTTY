@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/Ltorre/ManaTTY/models"
@@ -11,10 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// ErrSaveNotFound is returned when a game save is not found.
-var ErrSaveNotFound = errors.New("game save not found")
-
 // SaveRepository handles game save database operations.
+// Implements the SaveStore interface.
 type SaveRepository struct {
 	collection *mongo.Collection
 }
