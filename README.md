@@ -4,7 +4,9 @@ A heroic fantasy terminal game with idle/incremental mechanics, built with Go an
 
 ## 🎮 Game Concept
 
-You are a wizard climbing a magical tower! Cast spells to earn mana/experience and ascend through floors. Each floor unlocks new spells that can be cast automatically. Combine spells into powerful rituals (3-spell combos) to boost your progression. When you reach the top, prestige to gain permanent bonuses and start again stronger!
+You are a wizard climbing a magical tower! Cast spells to deal damage and earn mana to ascend through floors. Each floor unlocks new spells that can be cast automatically. Combine spells into powerful rituals (3-spell combos) to boost your progression. When you reach the top, prestige to gain permanent bonuses and start again stronger!
+
+**New:** Enter a nickname at launch to support multiple local save files!
 
 ## 📋 Project Status
 
