@@ -8,7 +8,7 @@ You are a wizard climbing a magical tower! Cast spells to earn mana/experience a
 
 ## 📋 Project Status
 
-**Current Phase:** Rituals & Prestige System Complete
+**Current Phase:** ✅ Complete - Ready to Play!
 
 ### Milestones
 
@@ -20,7 +20,7 @@ You are a wizard climbing a magical tower! Cast spells to earn mana/experience a
 - [x] **Milestone 6:** Bubble Tea UI foundation
 - [x] **Milestone 7:** Main integration & Tower/Spell views
 - [x] **Milestone 8:** Rituals & Prestige system
-- [ ] **Milestone 9:** Offline progress & polish
+- [x] **Milestone 9:** Offline progress & polish
 
 ## 🛠️ Tech Stack
 
@@ -85,10 +85,27 @@ DEBUG=false
 ## 🎯 Core Mechanics
 
 - **Mana Generation:** Earn mana passively based on your current floor
-- **Floor Climbing:** Spend mana to ascend to higher floors
-- **Spells:** Unlock and cast spells with various cooldowns
+- **Floor Climbing:** Spend mana to ascend to higher floors (cost scales exponentially)
+- **Spells:** Unlock and cast 12 unique spells across 4 elements (Fire, Ice, Thunder, Arcane)
+- **Auto-Cast:** Toggle automatic spell casting for hands-free progression
 - **Rituals:** Combine 3 spells for +15% mana generation per ritual
-- **Prestige:** Reset at floor 100 for permanent multipliers
+- **Prestige:** Reset at floor 100 for permanent multipliers and bonuses
+- **Offline Progress:** Earn mana even while away (50% efficiency)
+
+## ⌨️ Controls
+
+| Key | Action |
+|-----|--------|
+| `S` | Open Spells view |
+| `R` | Open Rituals view |
+| `T` | Open Stats view |
+| `P` | Open Prestige view (at floor 100+) |
+| `M` | Open Menu |
+| `A` | Toggle Auto-cast |
+| `↑/↓` | Navigate lists |
+| `Enter` | Select/Cast |
+| `Ctrl+S` | Manual Save |
+| `Q` | Quit (auto-saves) |
 
 ## 📝 License
 
