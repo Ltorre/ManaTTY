@@ -2,7 +2,7 @@ package engine
 
 import (
 	"errors"
-	"math/rand"
+	"math/rand/v2"
 
 	"github.com/Ltorre/ManaTTY/game"
 	"github.com/Ltorre/ManaTTY/models"
@@ -21,6 +21,11 @@ var (
 // CastSpell attempts to cast a spell.
 // Both manual and auto-cast now require mana. Manual costs +10% more.
 func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual bool) error {
+	// Check if spell needs specialization choice before allowing cast
+	if _, needs := spell.NeedsSpecialization(); needs {
+		return ErrNeedsSpecialization
+	}
+
 	// Check cooldown
 	if !spell.IsReady() {
 		return ErrSpellOnCooldown

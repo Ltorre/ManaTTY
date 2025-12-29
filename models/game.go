@@ -48,6 +48,24 @@ type AutoCastSlotConfig struct {
 	Condition AutoCastCondition `bson:"condition" json:"condition"`
 }
 
+// ConditionDisplayNames provides consistent display names for auto-cast conditions.
+var ConditionDisplayNames = map[AutoCastCondition]string{
+	ConditionAlways:        "Always",
+	ConditionManaAbove50:   "Mana > 50%",
+	ConditionManaAbove75:   "Mana > 75%",
+	ConditionSigilNotFull:  "Sigil not full",
+	ConditionSynergyActive: "Synergy active",
+}
+
+// ConditionShortNames provides compact display names for the loadout panel.
+var ConditionShortNames = map[AutoCastCondition]string{
+	ConditionAlways:        "Always",
+	ConditionManaAbove50:   "Mana>50%",
+	ConditionManaAbove75:   "Mana>75%",
+	ConditionSigilNotFull:  "Sigil✗",
+	ConditionSynergyActive: "Synergy",
+}
+
 // SessionData contains current play session information.
 type SessionData struct {
 	SessionStartMs  int64     `bson:"session_start_ms" json:"session_start_ms"`
@@ -194,8 +212,11 @@ func (gs *GameState) GetAutoCastSlotCount() int {
 
 // GetAvailableAutoCastSlots returns remaining slot capacity.
 func (gs *GameState) GetAvailableAutoCastSlots() int {
-	usedSlots := len(gs.Session.AutoCastConfigs)
-	if usedSlots == 0 {
+	// Use new config system if initialized (non-nil), otherwise fall back to legacy
+	var usedSlots int
+	if gs.Session.AutoCastConfigs != nil {
+		usedSlots = len(gs.Session.AutoCastConfigs)
+	} else {
 		usedSlots = len(gs.Session.AutoCastSlots) // Legacy fallback
 	}
 	return gs.GetAutoCastSlotCount() - usedSlots
@@ -308,30 +329,28 @@ func (gs *GameState) ToggleSpellAutoCast(spellID string) AutoCastToggleResult {
 // MoveAutoCastSlot moves a spell in the auto-cast slots (for priority ordering).
 // direction: -1 = move up (higher priority), +1 = move down (lower priority)
 func (gs *GameState) MoveAutoCastSlot(spellID string, direction int) bool {
-	// Move in new config system
-	configs := gs.Session.AutoCastConfigs
-	for i, cfg := range configs {
+	// Move in new config system (operate directly on slice, not a copy)
+	for i, cfg := range gs.Session.AutoCastConfigs {
 		if cfg.SpellID == spellID {
 			newIndex := i + direction
-			if newIndex < 0 || newIndex >= len(configs) {
+			if newIndex < 0 || newIndex >= len(gs.Session.AutoCastConfigs) {
 				return false // Can't move further
 			}
-			// Swap
-			configs[i], configs[newIndex] = configs[newIndex], configs[i]
+			// Swap directly on session data
+			gs.Session.AutoCastConfigs[i], gs.Session.AutoCastConfigs[newIndex] = gs.Session.AutoCastConfigs[newIndex], gs.Session.AutoCastConfigs[i]
 			break
 		}
 	}
 
 	// Also move in legacy slots for backward compat
-	slots := gs.Session.AutoCastSlots
-	for i, id := range slots {
+	for i, id := range gs.Session.AutoCastSlots {
 		if id == spellID {
 			newIndex := i + direction
-			if newIndex < 0 || newIndex >= len(slots) {
+			if newIndex < 0 || newIndex >= len(gs.Session.AutoCastSlots) {
 				return false // Can't move further
 			}
-			// Swap
-			slots[i], slots[newIndex] = slots[newIndex], slots[i]
+			// Swap directly on session data
+			gs.Session.AutoCastSlots[i], gs.Session.AutoCastSlots[newIndex] = gs.Session.AutoCastSlots[newIndex], gs.Session.AutoCastSlots[i]
 			return true
 		}
 	}

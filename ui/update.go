@@ -241,14 +241,7 @@ func (m Model) handleSpellsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			spell := m.gameState.Spells[m.selectedIndex]
 			if m.gameState.IsSpellInAutoCast(spell.ID) {
 				newCond := m.gameState.CycleAutoCastCondition(spell.ID)
-				condNames := map[models.AutoCastCondition]string{
-					models.ConditionAlways:        "Always",
-					models.ConditionManaAbove50:   "Mana > 50%",
-					models.ConditionManaAbove75:   "Mana > 75%",
-					models.ConditionSigilNotFull:  "Sigil not full",
-					models.ConditionSynergyActive: "Synergy active",
-				}
-				m.ShowNotification(fmt.Sprintf("%s: %s", spell.Name, condNames[newCond]))
+				m.ShowNotification(fmt.Sprintf("%s: %s", spell.Name, models.ConditionDisplayNames[newCond]))
 			} else {
 				m.ShowNotification(spell.Name + " not in auto-cast slot")
 			}
@@ -382,13 +375,7 @@ func (m Model) handleSpecializeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 					}
 					spell.Tier2Spec = spec
 				}
-				specNames := map[models.SpellSpecialization]string{
-					models.SpecCritChance:     "Crit Chance",
-					models.SpecManaEfficiency: "Mana Efficiency",
-					models.SpecBurstDamage:    "Burst Damage",
-					models.SpecRapidCast:      "Rapid Cast",
-				}
-				m.ShowNotification(fmt.Sprintf("%s specialized: %s!", spell.Name, specNames[spec]))
+				m.ShowNotification(fmt.Sprintf("%s specialized: %s!", spell.Name, models.SpecializationDisplayNames[spec]))
 				m.Navigate(ViewSpells)
 			}
 		}
