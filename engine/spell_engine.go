@@ -157,7 +157,7 @@ func (e *GameEngine) ToggleSpellAutoCast(gs *models.GameState, spellID string) (
 	if gs.GetSpellByID(spellID) == nil {
 		return false, ErrSpellNotFound
 	}
-	
+
 	result := gs.ToggleSpellAutoCast(spellID)
 	switch result {
 	case models.AutoCastAdded:
@@ -252,11 +252,11 @@ func (e *GameEngine) UpgradeSpell(gs *models.GameState, spell *models.Spell) err
 
 // GetSpellEffectiveStats returns the effective stats for a spell at its current level.
 type SpellEffectiveStats struct {
-	ManaCost     float64
-	CooldownMs   int64
-	Damage       float64
-	UpgradeCost  float64
-	CanUpgrade   bool
+	ManaCost    float64
+	CooldownMs  int64
+	Damage      float64
+	UpgradeCost float64
+	CanUpgrade  bool
 }
 
 func (e *GameEngine) GetSpellEffectiveStats(gs *models.GameState, spell *models.Spell) SpellEffectiveStats {
