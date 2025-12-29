@@ -41,8 +41,8 @@ type SessionData struct {
 	AutoCastSlots   []string  `bson:"auto_cast_slots" json:"auto_cast_slots"` // Spell IDs in auto-cast slots
 
 	// Element synergy tracking
-	LastCastElements   []Element `bson:"last_cast_elements" json:"last_cast_elements"`     // Recent cast elements (up to 3)
-	ActiveSynergy      Element   `bson:"active_synergy" json:"active_synergy"`             // Currently active synergy element
+	LastCastElements   []Element `bson:"last_cast_elements" json:"last_cast_elements"`       // Recent cast elements (up to 3)
+	ActiveSynergy      Element   `bson:"active_synergy" json:"active_synergy"`               // Currently active synergy element
 	SynergyExpiresAtMs int64     `bson:"synergy_expires_at_ms" json:"synergy_expires_at_ms"` // When synergy expires
 
 	// Aggregated notifications
@@ -196,9 +196,9 @@ func (gs *GameState) RemoveSpellFromAutoCast(spellID string) bool {
 type AutoCastToggleResult int
 
 const (
-	AutoCastRemoved      AutoCastToggleResult = iota // Spell was removed from slot
-	AutoCastAdded                                     // Spell was added to slot
-	AutoCastSlotsFull                                 // Failed: no slots available
+	AutoCastRemoved   AutoCastToggleResult = iota // Spell was removed from slot
+	AutoCastAdded                                 // Spell was added to slot
+	AutoCastSlotsFull                             // Failed: no slots available
 )
 
 // ToggleSpellAutoCast adds or removes a spell from auto-cast.
@@ -233,9 +233,18 @@ func (gs *GameState) MoveAutoCastSlot(spellID string, direction int) bool {
 }
 
 // RecordSpellCast records a spell cast for element synergy tracking.
+// Resets the streak if a different element is cast (consecutive same-element tracking).
 func (gs *GameState) RecordSpellCast(element Element) {
+	// If casting a different element, reset the streak
+	if len(gs.Session.LastCastElements) > 0 {
+		lastElement := gs.Session.LastCastElements[len(gs.Session.LastCastElements)-1]
+		if lastElement != element {
+			gs.Session.LastCastElements = []Element{}
+		}
+	}
+
 	gs.Session.LastCastElements = append(gs.Session.LastCastElements, element)
-	// Keep only last 3
+	// Keep only last 3 (enough to trigger synergy)
 	if len(gs.Session.LastCastElements) > 3 {
 		gs.Session.LastCastElements = gs.Session.LastCastElements[1:]
 	}
