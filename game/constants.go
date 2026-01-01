@@ -63,9 +63,9 @@ const (
 	ResonanceArcaneSigilChargeBonus   = 0.05 // +5% sigil charge (Arcane spells)
 
 	// Ascension Sigil - damage requirement to climb floors
-	SigilBaseDamage    = 200.0 // Base damage used in sigil requirement formula (floor 1 baseline)
-	SigilScaleExponent = 1.6   // Scaling per floor (tuned to stay relevant vs mana costs)
-	SigilFloorFactor   = 1.0   // Multiplier to tune overall gate strength
+	SigilBaseDamage    = 500.0 // Base damage used in sigil requirement formula (floor 1 baseline)
+	SigilScaleExponent = 1.8   // Scaling per floor (higher than mana to make damage matter)
+	SigilFloorFactor   = 1.5   // Multiplier to tune overall gate strength
 
 	// Offline Progress
 	OfflinePenalty    = 0.50 // 50% mana generation while offline

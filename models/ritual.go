@@ -4,10 +4,11 @@ package models
 type RitualEffectType string
 
 const (
-	RitualEffectDamage    RitualEffectType = "damage"     // Fire signature: +X% spell damage
-	RitualEffectCooldown  RitualEffectType = "cooldown"   // Ice signature: -X% spell cooldown
-	RitualEffectManaCost  RitualEffectType = "mana_cost"  // Thunder signature: -X% mana cost
-	RitualEffectSigilRate RitualEffectType = "sigil_rate" // Arcane signature: +X% sigil charge rate
+	RitualEffectDamage      RitualEffectType = "damage"      // Fire signature: +X% spell damage
+	RitualEffectCooldown    RitualEffectType = "cooldown"    // Ice signature: -X% spell cooldown
+	RitualEffectManaCost    RitualEffectType = "mana_cost"   // Thunder signature: -X% mana cost
+	RitualEffectSigilRate   RitualEffectType = "sigil_rate"  // Arcane signature: +X% sigil charge rate
+	RitualEffectManaGenRate RitualEffectType = "mana_gen"    // Hybrid combos: +X% mana generation
 )
 
 // RitualComposition indicates the element distribution in a ritual.

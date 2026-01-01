@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -254,7 +255,13 @@ func (m Model) viewTower() string {
 			// Show effect summary inline
 			if len(comboInfo.Effects) > 0 {
 				effectStrs := []string{}
-				for _, effect := range comboInfo.Effects {
+				// Sort effects by type for consistent display order (prevents flickering)
+				sortedEffects := make([]models.RitualEffect, len(comboInfo.Effects))
+				copy(sortedEffects, comboInfo.Effects)
+				sort.Slice(sortedEffects, func(i, j int) bool {
+					return string(sortedEffects[i].Type) < string(sortedEffects[j].Type)
+				})
+				for _, effect := range sortedEffects {
 					icon := game.GetRitualEffectIcon(effect.Type)
 					effectStr := game.GetEffectDisplayString(effect)
 					effectStrs = append(effectStrs, icon+" "+effectStr)
@@ -493,7 +500,13 @@ func (m Model) viewRituals() string {
 		// Show ritual effects (v1.2.0)
 		if len(ritual.Effects) > 0 {
 			effectStrs := []string{}
-			for _, effect := range ritual.Effects {
+			// Sort effects by type for consistent display order (prevents flickering)
+			sortedEffects := make([]models.RitualEffect, len(ritual.Effects))
+			copy(sortedEffects, ritual.Effects)
+			sort.Slice(sortedEffects, func(i, j int) bool {
+				return string(sortedEffects[i].Type) < string(sortedEffects[j].Type)
+			})
+			for _, effect := range sortedEffects {
 				icon := game.GetRitualEffectIcon(effect.Type)
 				effectStr := game.GetEffectDisplayString(effect)
 				effectStrs = append(effectStrs, icon+" "+effectStr)
@@ -566,7 +579,13 @@ func (m Model) viewRituals() string {
 		lines = append(lines, HighlightStyle.Render("  Preview: "+previewName))
 
 		effectStrs := []string{}
-		for _, effect := range comboInfo.Effects {
+		// Sort effects by type for consistent display order (prevents flickering)
+		sortedEffects := make([]models.RitualEffect, len(comboInfo.Effects))
+		copy(sortedEffects, comboInfo.Effects)
+		sort.Slice(sortedEffects, func(i, j int) bool {
+			return string(sortedEffects[i].Type) < string(sortedEffects[j].Type)
+		})
+		for _, effect := range sortedEffects {
 			icon := game.GetRitualEffectIcon(effect.Type)
 			effectStr := game.GetEffectDisplayString(effect)
 			effectStrs = append(effectStrs, icon+" "+effectStr)
