@@ -67,6 +67,10 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
   - Smart emoji detection: full emojis in Windows Terminal, ASCII fallback for legacy CMD
   - Pre-built binaries for Windows, macOS, Linux, FreeBSD (x64, ARM, 32-bit)
   - Path traversal protection with UUID validation
+- [x] **v1.3.1 Balance & Polish Update**
+  - **Sigil rebalance:** Damage requirements greatly increased (2.5x base, steeper scaling) to make damage gating meaningful
+  - **Mana generation rituals:** Hybrid combos now grant +10% mana generation bonus 💎
+  - **Display fix:** Ritual effects now display in consistent order (no more flickering)
 
 ### Future Roadmap
 
