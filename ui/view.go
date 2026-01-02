@@ -12,6 +12,17 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// sortRitualEffects returns a sorted copy of ritual effects by type.
+// This ensures consistent display order and prevents flickering in the UI.
+func sortRitualEffects(effects []models.RitualEffect) []models.RitualEffect {
+	sorted := make([]models.RitualEffect, len(effects))
+	copy(sorted, effects)
+	sort.Slice(sorted, func(i, j int) bool {
+		return string(sorted[i].Type) < string(sorted[j].Type)
+	})
+	return sorted
+}
+
 // View renders the current view.
 func (m Model) View() string {
 	if !m.ready {
@@ -255,12 +266,7 @@ func (m Model) viewTower() string {
 			// Show effect summary inline
 			if len(comboInfo.Effects) > 0 {
 				effectStrs := []string{}
-				// Sort effects by type for consistent display order (prevents flickering)
-				sortedEffects := make([]models.RitualEffect, len(comboInfo.Effects))
-				copy(sortedEffects, comboInfo.Effects)
-				sort.Slice(sortedEffects, func(i, j int) bool {
-					return string(sortedEffects[i].Type) < string(sortedEffects[j].Type)
-				})
+				sortedEffects := sortRitualEffects(comboInfo.Effects)
 				for _, effect := range sortedEffects {
 					icon := game.GetRitualEffectIcon(effect.Type)
 					effectStr := game.GetEffectDisplayString(effect)
@@ -500,12 +506,7 @@ func (m Model) viewRituals() string {
 		// Show ritual effects (v1.2.0)
 		if len(ritual.Effects) > 0 {
 			effectStrs := []string{}
-			// Sort effects by type for consistent display order (prevents flickering)
-			sortedEffects := make([]models.RitualEffect, len(ritual.Effects))
-			copy(sortedEffects, ritual.Effects)
-			sort.Slice(sortedEffects, func(i, j int) bool {
-				return string(sortedEffects[i].Type) < string(sortedEffects[j].Type)
-			})
+			sortedEffects := sortRitualEffects(ritual.Effects)
 			for _, effect := range sortedEffects {
 				icon := game.GetRitualEffectIcon(effect.Type)
 				effectStr := game.GetEffectDisplayString(effect)
@@ -579,12 +580,7 @@ func (m Model) viewRituals() string {
 		lines = append(lines, HighlightStyle.Render("  Preview: "+previewName))
 
 		effectStrs := []string{}
-		// Sort effects by type for consistent display order (prevents flickering)
-		sortedEffects := make([]models.RitualEffect, len(comboInfo.Effects))
-		copy(sortedEffects, comboInfo.Effects)
-		sort.Slice(sortedEffects, func(i, j int) bool {
-			return string(sortedEffects[i].Type) < string(sortedEffects[j].Type)
-		})
+		sortedEffects := sortRitualEffects(comboInfo.Effects)
 		for _, effect := range sortedEffects {
 			icon := game.GetRitualEffectIcon(effect.Type)
 			effectStr := game.GetEffectDisplayString(effect)
