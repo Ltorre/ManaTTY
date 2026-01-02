@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -10,6 +11,17 @@ import (
 	"github.com/Ltorre/ManaTTY/utils"
 	"github.com/charmbracelet/lipgloss"
 )
+
+// sortRitualEffects returns a sorted copy of ritual effects by type.
+// This ensures consistent display order and prevents flickering in the UI.
+func sortRitualEffects(effects []models.RitualEffect) []models.RitualEffect {
+	sorted := make([]models.RitualEffect, len(effects))
+	copy(sorted, effects)
+	sort.Slice(sorted, func(i, j int) bool {
+		return string(sorted[i].Type) < string(sorted[j].Type)
+	})
+	return sorted
+}
 
 // View renders the current view.
 func (m Model) View() string {
@@ -254,7 +266,8 @@ func (m Model) viewTower() string {
 			// Show effect summary inline
 			if len(comboInfo.Effects) > 0 {
 				effectStrs := []string{}
-				for _, effect := range comboInfo.Effects {
+				sortedEffects := sortRitualEffects(comboInfo.Effects)
+				for _, effect := range sortedEffects {
 					icon := game.GetRitualEffectIcon(effect.Type)
 					effectStr := game.GetEffectDisplayString(effect)
 					effectStrs = append(effectStrs, icon+" "+effectStr)
@@ -493,7 +506,8 @@ func (m Model) viewRituals() string {
 		// Show ritual effects (v1.2.0)
 		if len(ritual.Effects) > 0 {
 			effectStrs := []string{}
-			for _, effect := range ritual.Effects {
+			sortedEffects := sortRitualEffects(ritual.Effects)
+			for _, effect := range sortedEffects {
 				icon := game.GetRitualEffectIcon(effect.Type)
 				effectStr := game.GetEffectDisplayString(effect)
 				effectStrs = append(effectStrs, icon+" "+effectStr)
@@ -566,7 +580,8 @@ func (m Model) viewRituals() string {
 		lines = append(lines, HighlightStyle.Render("  Preview: "+previewName))
 
 		effectStrs := []string{}
-		for _, effect := range comboInfo.Effects {
+		sortedEffects := sortRitualEffects(comboInfo.Effects)
+		for _, effect := range sortedEffects {
 			icon := game.GetRitualEffectIcon(effect.Type)
 			effectStr := game.GetEffectDisplayString(effect)
 			effectStrs = append(effectStrs, icon+" "+effectStr)

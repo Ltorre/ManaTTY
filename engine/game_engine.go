@@ -83,6 +83,12 @@ func (e *GameEngine) CalculateManaPerSecond(gs *models.GameState) float64 {
 		permanentMultiplier,
 	)
 
+	// Apply ritual mana generation bonuses (v1.3.1 - hybrid combos)
+	ritualManaGenBonus := e.GetTotalRitualManaGenBonus(gs)
+	if ritualManaGenBonus > 0 {
+		manaPerSec *= (1.0 + ritualManaGenBonus)
+	}
+
 	// Floor-event temporary bonus
 	if gs.GetActiveFloorBuffChoice(gs.Tower.CurrentFloor) == models.FloorEventChoiceManaGen {
 		manaPerSec *= (1.0 + game.FloorEventManaGenBonus)
