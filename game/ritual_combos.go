@@ -12,11 +12,12 @@ import (
 
 // Ritual effect magnitudes
 const (
-	RitualPureMagnitude   = 0.18 // +18% for pure (3 same element)
-	RitualHybridMagnitude = 0.12 // +12% for hybrid (2+1)
-	RitualTriadMagnitude  = 0.08 // +8% each for triad (1/1/1)
-	RitualEchoKicker      = 0.05 // +5% bonus when Spell Echo is included
-	RitualManaGenBonus    = 0.10 // +10% mana generation for specific hybrid combos
+	RitualPureMagnitude        = 0.18 // +18% for pure (3 same element)
+	RitualPureArcaneMagnitude  = 0.20 // +20% for pure Arcane (special bonus)
+	RitualHybridMagnitude      = 0.12 // +12% for hybrid dominant element
+	RitualHybridSecondary      = 0.10 // +10% for hybrid secondary element
+	RitualTriadMagnitude       = 0.08 // +8% each for triad (1/1/1)
+	RitualEchoKicker           = 0.05 // +5% bonus when Spell Echo is included
 )
 
 // Element adjectives by count (1, 2, 3 of same element)
@@ -166,27 +167,36 @@ func generateEffects(comp models.RitualComposition, dominant models.Element, cou
 
 	switch comp {
 	case models.CompositionPure:
-		// Single element's signature bonus at +18%
+		// Single element's signature bonus at +18% (Arcane gets +20%)
+		magnitude := RitualPureMagnitude
+		if dominant == models.ElementArcane {
+			magnitude = RitualPureArcaneMagnitude
+		}
 		effect := models.RitualEffect{
 			Type:      getElementEffectType(dominant),
-			Magnitude: RitualPureMagnitude + echoBonus,
+			Magnitude: magnitude + echoBonus,
 		}
 		effects = append(effects, effect)
 
 	case models.CompositionHybrid:
 		// Dominant element's bonus at +12%
-		effect := models.RitualEffect{
+		dominantEffect := models.RitualEffect{
 			Type:      getElementEffectType(dominant),
 			Magnitude: RitualHybridMagnitude + echoBonus,
 		}
-		effects = append(effects, effect)
+		effects = append(effects, dominantEffect)
 
-		// Add mana generation bonus for hybrid combos
-		manaGenEffect := models.RitualEffect{
-			Type:      models.RitualEffectManaGenRate,
-			Magnitude: RitualManaGenBonus + echoBonus,
+		// Secondary element's bonus at +10%
+		for elem, count := range counts {
+			if elem != dominant && count > 0 {
+				secondaryEffect := models.RitualEffect{
+					Type:      getElementEffectType(elem),
+					Magnitude: RitualHybridSecondary + echoBonus,
+				}
+				effects = append(effects, secondaryEffect)
+				break // Only one secondary element in hybrid
+			}
 		}
-		effects = append(effects, manaGenEffect)
 
 	case models.CompositionTriad:
 		// All three elements get +8% each
@@ -220,7 +230,7 @@ func getElementEffectType(elem models.Element) models.RitualEffectType {
 	case models.ElementThunder:
 		return models.RitualEffectManaCost
 	case models.ElementArcane:
-		return models.RitualEffectSigilRate
+		return models.RitualEffectManaGenRate
 	default:
 		return models.RitualEffectDamage
 	}
