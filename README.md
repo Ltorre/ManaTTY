@@ -53,8 +53,8 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 #### v1.2.0 — Named Rituals
 - [x] **Milestone 15:** Named Ritual Combos & Effects
   - Each 3-spell ritual now has a unique generated name based on element composition
-  - Rituals grant passive bonuses: Pure (3 same element) = +18%, Hybrid (2+1) = +12%, Triad (1/1/1) = +8% each
-  - 🔥 Fire rituals boost spell damage, ❄️ Ice reduces cooldowns, ⚡ Thunder reduces mana cost, ✨ Arcane boosts sigil charge
+  - Rituals grant passive bonuses: Pure (3 same) = +18% (+20% for Arcane), Hybrid (2+1) = +12% dominant + +10% secondary, Triad (1/1/1) = +8% each
+  - 🔥 Fire boosts damage, ❄️ Ice reduces cooldowns, ⚡ Thunder reduces mana cost, ✨ Arcane boosts mana generation
   - Including Spell Echo in a ritual adds a +5% kicker to all effects
   - Special "signature" combos have flavor names (Elemental Trinity, Apocalypse, Resonant Fire, etc.)
   - Live preview of ritual name and effects when selecting spells
@@ -68,8 +68,8 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
   - Pre-built binaries for Windows, macOS, Linux, FreeBSD (x64, ARM, 32-bit)
   - Path traversal protection with UUID validation
 - [x] **v1.3.1 Balance & Polish Update**
-  - **Sigil rebalance:** Damage requirements greatly increased (2.5x base, steeper scaling) to make damage gating meaningful
-  - **Mana generation rituals:** Hybrid combos now grant +10% mana generation bonus 💎
+  - **Sigil rebalance:** Damage requirements greatly increased (2.5x base from 200→500, exponent 1.6→1.8, floor factor 1.0→1.5) for meaningful damage gating
+  - **Ritual redesign:** Arcane now grants mana generation (+20% pure bonus). Hybrid combos grant dual bonuses (+12% dominant + +10% secondary)
   - **Display fix:** Ritual effects now display in consistent order (no more flickering)
 
 ### Future Roadmap
