@@ -167,7 +167,7 @@ func generateEffects(comp models.RitualComposition, dominant models.Element, cou
 
 	switch comp {
 	case models.CompositionPure:
-		// Single element's signature bonus at +18% (Arcane gets +20%)
+		// Single element's signature bonus at +18% (v1.3.1: Arcane gets +20% special bonus)
 		magnitude := RitualPureMagnitude
 		if dominant == models.ElementArcane {
 			magnitude = RitualPureArcaneMagnitude
@@ -186,7 +186,7 @@ func generateEffects(comp models.RitualComposition, dominant models.Element, cou
 		}
 		effects = append(effects, dominantEffect)
 
-		// Secondary element's bonus at +10%
+		// Secondary element's bonus at +10% (v1.3.1: hybrids now grant dual bonuses)
 		for elem, count := range counts {
 			if elem != dominant && count > 0 {
 				secondaryEffect := models.RitualEffect{
