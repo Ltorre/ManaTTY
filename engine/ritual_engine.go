@@ -210,3 +210,8 @@ func (e *GameEngine) GetTotalRitualManaCostReduction(gs *models.GameState) float
 func (e *GameEngine) GetTotalRitualSigilChargeBonus(gs *models.GameState) float64 {
 	return e.getTotalRitualEffectBonus(gs, models.RitualEffectSigilRate)
 }
+
+// GetTotalRitualManaGenBonus returns combined mana generation bonus from all active rituals.
+func (e *GameEngine) GetTotalRitualManaGenBonus(gs *models.GameState) float64 {
+	return e.getTotalRitualEffectBonus(gs, models.RitualEffectManaGenRate)
+}

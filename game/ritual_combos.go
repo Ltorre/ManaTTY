@@ -12,10 +12,12 @@ import (
 
 // Ritual effect magnitudes
 const (
-	RitualPureMagnitude   = 0.18 // +18% for pure (3 same element)
-	RitualHybridMagnitude = 0.12 // +12% for hybrid (2+1)
-	RitualTriadMagnitude  = 0.08 // +8% each for triad (1/1/1)
-	RitualEchoKicker      = 0.05 // +5% bonus when Spell Echo is included
+	RitualPureMagnitude        = 0.18 // +18% for pure (3 same element)
+	RitualPureArcaneMagnitude  = 0.20 // +20% for pure Arcane (special bonus)
+	RitualHybridMagnitude      = 0.12 // +12% for hybrid dominant element
+	RitualHybridSecondary      = 0.10 // +10% for hybrid secondary element
+	RitualTriadMagnitude       = 0.08 // +8% each for triad (1/1/1)
+	RitualEchoKicker           = 0.05 // +5% bonus when Spell Echo is included
 )
 
 // Element adjectives by count (1, 2, 3 of same element)
@@ -165,24 +167,48 @@ func generateEffects(comp models.RitualComposition, dominant models.Element, cou
 
 	switch comp {
 	case models.CompositionPure:
-		// Single element's signature bonus at +18%
+		// Single element's signature bonus at +18% (v1.3.1: Arcane gets +20% special bonus)
+		magnitude := RitualPureMagnitude
+		if dominant == models.ElementArcane {
+			magnitude = RitualPureArcaneMagnitude
+		}
 		effect := models.RitualEffect{
 			Type:      getElementEffectType(dominant),
-			Magnitude: RitualPureMagnitude + echoBonus,
+			Magnitude: magnitude + echoBonus,
 		}
 		effects = append(effects, effect)
 
 	case models.CompositionHybrid:
 		// Dominant element's bonus at +12%
-		effect := models.RitualEffect{
+		dominantEffect := models.RitualEffect{
 			Type:      getElementEffectType(dominant),
 			Magnitude: RitualHybridMagnitude + echoBonus,
 		}
-		effects = append(effects, effect)
+		effects = append(effects, dominantEffect)
+
+		// Secondary element's bonus at +10% (v1.3.1: hybrids now grant dual bonuses)
+		for elem, count := range counts {
+			if elem != dominant && count > 0 {
+				secondaryEffect := models.RitualEffect{
+					Type:      getElementEffectType(elem),
+					Magnitude: RitualHybridSecondary + echoBonus,
+				}
+				effects = append(effects, secondaryEffect)
+				break // Only one secondary element in hybrid
+			}
+		}
 
 	case models.CompositionTriad:
 		// All three elements get +8% each
+		// Sort elements for consistent order (prevents display flickering)
+		elements := make([]models.Element, 0, len(counts))
 		for elem := range counts {
+			elements = append(elements, elem)
+		}
+		sort.Slice(elements, func(i, j int) bool {
+			return string(elements[i]) < string(elements[j])
+		})
+		for _, elem := range elements {
 			effect := models.RitualEffect{
 				Type:      getElementEffectType(elem),
 				Magnitude: RitualTriadMagnitude + echoBonus,
@@ -204,7 +230,7 @@ func getElementEffectType(elem models.Element) models.RitualEffectType {
 	case models.ElementThunder:
 		return models.RitualEffectManaCost
 	case models.ElementArcane:
-		return models.RitualEffectSigilRate
+		return models.RitualEffectManaGenRate
 	default:
 		return models.RitualEffectDamage
 	}
@@ -328,7 +354,9 @@ func GetEffectDisplayString(effect models.RitualEffect) string {
 		sign = "-"
 		suffix = " cost"
 	case models.RitualEffectSigilRate:
-		suffix = " sigil"
+		suffix = " sigil rate"
+	case models.RitualEffectManaGenRate:
+		suffix = " mana/s"
 	}
 
 	percent := int(effect.Magnitude * 100)
@@ -348,6 +376,8 @@ func GetRitualEffectIcon(effectType models.RitualEffectType) string {
 			return "[T]"
 		case models.RitualEffectSigilRate:
 			return "[A]"
+		case models.RitualEffectManaGenRate:
+			return "[M]"
 		default:
 			return "[*]"
 		}
@@ -361,6 +391,8 @@ func GetRitualEffectIcon(effectType models.RitualEffectType) string {
 		return "⚡"
 	case models.RitualEffectSigilRate:
 		return "✨"
+	case models.RitualEffectManaGenRate:
+		return "💎"
 	default:
 		return "⭐"
 	}
