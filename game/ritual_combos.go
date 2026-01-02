@@ -344,7 +344,7 @@ func GetEffectDisplayString(effect models.RitualEffect) string {
 		sign = "-"
 		suffix = " cost"
 	case models.RitualEffectSigilRate:
-		suffix = " sigil"
+		suffix = " sigil rate"
 	case models.RitualEffectManaGenRate:
 		suffix = " mana/s"
 	}
