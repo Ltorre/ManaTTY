@@ -12,6 +12,9 @@ mage-tower-ascension
 # Output of the go coverage tool
 *.out
 
+# Media files
+*.mp4
+
 # Dependency directories
 vendor/
 
