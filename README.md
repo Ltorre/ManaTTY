@@ -74,15 +74,9 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 
 ### Future Roadmap
 
-#### v1.4.0 — Advanced Build Systems (Planned)
+#### v1.4.0 — Ritual Synergies (Planned)
 
-Focus: Enhance buildcrafting depth while maintaining idle-friendly gameplay.
-
-- [ ] **Milestone 17: Spell Evolution & Mastery System**
-  - Spells gain mastery points through usage (1 point per 1000 casts)
-  - Permanent upgrades per spell: Fire +5% dmg, Ice -2% CD, Thunder -3% cost, Arcane +2% mana regen
-  - Mastery persists through prestige, showing lifetime progress
-  - Creates gradual permanent progression and rewards spell commitment
+Focus: Transform rituals from independent choices into an interconnected puzzle system.
 
 - [ ] **Milestone 18: Ritual Synergies & Chains**
   - Rituals interact when certain combinations are active together
@@ -90,29 +84,36 @@ Focus: Enhance buildcrafting depth while maintaining idle-friendly gameplay.
   - 8-10 discoverable synergy combinations
   - Transforms 5 independent ritual slots into interconnected puzzle
   - All bonuses are passive (idle-friendly)
+  - Rewards strategic ritual composition planning
 
-- [ ] **Milestone 19: Advanced Spell Rotation System**
+#### Future Considerations
+
+- [ ] **Spell Evolution & Mastery System**
+  - Spells gain mastery points through usage (1 point per 1000 casts)
+  - Permanent upgrades per spell: Fire +5% dmg, Ice -2% CD, Thunder -3% cost, Arcane +2% mana regen
+  - Mastery persists through prestige, showing lifetime progress
+  - Creates gradual permanent progression and rewards spell commitment
+
+- [ ] **Advanced Spell Rotation System**
   - Replace basic auto-cast with priority-based rotation planner
   - Define spell priorities, conditional chains, and resource thresholds
   - Smart conditions: "mana efficient", "during synergy", "sigil almost full"
   - Cooldown weaving optimization for maximum uptime
   - Dramatically improves idle gameplay while rewarding optimization
 
-- [ ] **Milestone 20: Prestige Artifact System**
+- [ ] **Prestige Artifact System**
   - Unlock rare artifacts at major milestones (floors 100, 250, 500, etc.)
   - Limited equipment slots (3-5 artifacts max)
   - Each artifact provides unique build-defining bonuses
   - Examples: "Mana Capacitor" (+50% max mana, -20% regen), "Temporal Loop" (every 10th spell triggers twice)
   - Forces meaningful equipment choices and build specialization
 
-- [ ] **Milestone 21: Spell Combo System**
+- [ ] **Spell Combo System**
   - Casting specific spell sequences triggers combo bonuses
   - Examples: Fire→Fire→Ice = "Steam Burst" (+30% dmg), Ice→Thunder→Thunder = "Superconductor" (-50% cost)
   - 10-15 discoverable combos with visual feedback
   - Rewards thoughtful spell rotation planning
   - Works with auto-cast rotation system
-
-#### Future Considerations
 
 - [ ] **Mana Overflow Mechanics** - Convert excess mana generation into sigil charge, cooldown reduction, or burst damage
 - [ ] **Ritual Maturation** - Rituals gain +1% effectiveness per hour active (caps at +50% after 50 hours)
