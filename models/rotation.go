@@ -12,11 +12,11 @@ const (
 	RotationConditionSynergyActive RotationCondition = "synergy_active"
 
 	// v1.5.0: Advanced conditions
-	RotationConditionManaEfficient  RotationCondition = "mana_efficient"  // Only when mana/cost ratio > 2.0
-	RotationConditionDuringSynergy  RotationCondition = "during_synergy"  // Only when ritual synergy active for this element
+	RotationConditionManaEfficient  RotationCondition = "mana_efficient"    // Only when mana/cost ratio > 2.0
+	RotationConditionDuringSynergy  RotationCondition = "during_synergy"    // Only when ritual synergy active for this element
 	RotationConditionSigilAlmostFul RotationCondition = "sigil_almost_full" // Only when sigil > 80%
-	RotationConditionHighPriority   RotationCondition = "high_priority"   // Always cast ASAP (ignore mana efficiency)
-	RotationConditionFillerOnly     RotationCondition = "filler_only"     // Only when nothing else can cast
+	RotationConditionHighPriority   RotationCondition = "high_priority"     // Always cast ASAP (ignore mana efficiency)
+	RotationConditionFillerOnly     RotationCondition = "filler_only"       // Only when nothing else can cast
 )
 
 // RotationPriority defines spell priority tiers.
@@ -38,11 +38,11 @@ type RotationSpellConfig struct {
 
 // SpellRotation holds the complete rotation configuration.
 type SpellRotation struct {
-	Enabled          bool                   `bson:"enabled" json:"enabled"`                     // Master toggle
-	Spells           []RotationSpellConfig  `bson:"spells" json:"spells"`                       // Spell configurations
-	CooldownWeaving  bool                   `bson:"cooldown_weaving" json:"cooldown_weaving"`   // Smart cooldown management
-	ManaThreshold    float64                `bson:"mana_threshold" json:"mana_threshold"`       // Reserve this % of mana
-	OptimizeForIdle  bool                   `bson:"optimize_for_idle" json:"optimize_for_idle"` // Prioritize sustained DPS over burst
+	Enabled         bool                  `bson:"enabled" json:"enabled"`                     // Master toggle
+	Spells          []RotationSpellConfig `bson:"spells" json:"spells"`                       // Spell configurations
+	CooldownWeaving bool                  `bson:"cooldown_weaving" json:"cooldown_weaving"`   // Smart cooldown management
+	ManaThreshold   float64               `bson:"mana_threshold" json:"mana_threshold"`       // Reserve this % of mana
+	OptimizeForIdle bool                  `bson:"optimize_for_idle" json:"optimize_for_idle"` // Prioritize sustained DPS over burst
 }
 
 // GetConditionDescription returns a human-readable description for a rotation condition.
@@ -90,10 +90,10 @@ func GetPriorityLabel(priority RotationPriority) string {
 // DefaultRotation creates a default rotation configuration from auto-cast slots.
 func DefaultRotation() *SpellRotation {
 	return &SpellRotation{
-		Enabled:          false, // Disabled by default - user must enable
-		Spells:           []RotationSpellConfig{},
-		CooldownWeaving:  true,
-		ManaThreshold:    0.1, // Reserve 10% mana by default
-		OptimizeForIdle:  true,
+		Enabled:         false, // Disabled by default - user must enable
+		Spells:          []RotationSpellConfig{},
+		CooldownWeaving: true,
+		ManaThreshold:   0.1, // Reserve 10% mana by default
+		OptimizeForIdle: true,
 	}
 }

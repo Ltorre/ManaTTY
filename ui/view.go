@@ -48,6 +48,8 @@ func (m Model) View() string {
 		content = m.viewSpecialize()
 	case ViewFloorEvent:
 		content = m.viewFloorEvent()
+	case ViewRotation:
+		content = m.viewRotation()
 	default:
 		content = m.viewTower()
 	}
@@ -280,7 +282,7 @@ func (m Model) viewTower() string {
 
 	// Footer
 	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
-	footer := FooterStyle.Render("[S] Spells  [R] Rituals  [T] Stats  [P] Prestige  [A] Auto-cast  [Q] Quit")
+	footer := FooterStyle.Render("[S] Spells  [R] Rituals  [O] Rotation  [T] Stats  [P] Prestige  [A] Auto-cast  [Q] Quit")
 	lines = append(lines, footer)
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
@@ -815,6 +817,88 @@ func (m Model) viewSpecialize() string {
 
 	lines = append(lines, "")
 	lines = append(lines, FooterStyle.Render("[↑/↓] Select  [Enter] Confirm  [Esc] Cancel"))
+
+	return lipgloss.JoinVertical(lipgloss.Left, lines...)
+}
+
+// v1.5.0: Rotation System View
+func (m Model) viewRotation() string {
+	if m.gameState == nil {
+		return "No game loaded"
+	}
+
+	m.gameState.EnsureRotation()
+	rotation := m.gameState.Session.Rotation
+
+	sym := GetSymbols()
+	var lines []string
+
+	// Header
+	header := HeaderStyle.Width(80).Render(
+		TitleStyle.Render(sym.Bullet+" ADVANCED SPELL ROTATION"),
+	)
+	lines = append(lines, header)
+	lines = append(lines, "")
+
+	// Status
+	statusStr := "🔴 DISABLED"
+	if rotation.Enabled {
+		statusStr = "🟢 ENABLED"
+	}
+	lines = append(lines, HighlightStyle.Render(fmt.Sprintf("Rotation System: %s", statusStr)))
+	lines = append(lines, "")
+
+	// Settings
+	lines = append(lines, SubtitleStyle.Render("⚙️  Rotation Settings:"))
+	lines = append(lines, fmt.Sprintf("  Cooldown Weaving: %v (casts spells with shortest CD first)", rotation.CooldownWeaving))
+	lines = append(lines, fmt.Sprintf("  Mana Reserve: %.0f%% (reserves mana, never drops below this)", rotation.ManaThreshold*100))
+	lines = append(lines, fmt.Sprintf("  Optimize for Idle: %v (spreads casts for sustained DPS)", rotation.OptimizeForIdle))
+	lines = append(lines, "")
+
+	// Spell list
+	lines = append(lines, SubtitleStyle.Render("📋 Configured Spells:"))
+	if len(rotation.Spells) == 0 {
+		lines = append(lines, DimStyle.Render("  No spells configured. Press [V] to convert auto-cast slots."))
+	} else {
+		for i, config := range rotation.Spells {
+			spell := m.gameState.GetSpellByID(config.SpellID)
+			if spell == nil {
+				continue
+			}
+
+			icon := GetElementIcon(string(spell.Element))
+			priorityLabel := models.GetPriorityLabel(config.Priority)
+			condDesc := models.GetConditionDescription(config.Condition)
+
+			statusIcon := "✅"
+			if !config.Enabled {
+				statusIcon = "❌"
+			}
+
+			style := TextStyle
+			if i == m.selectedIndex {
+				style = SelectedStyle
+			}
+
+			spellLine := fmt.Sprintf("%s %s %s [%s] - %s",
+				statusIcon, icon, spell.Name, priorityLabel, condDesc)
+			lines = append(lines, style.Render(spellLine))
+		}
+	}
+
+	lines = append(lines, "")
+	lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+	lines = append(lines, "")
+
+	// Controls
+	controls := []string{
+		"[O] Toggle Rotation On/Off",
+		"[V] Convert Auto-Cast Slots",
+		"[W] Toggle Cooldown Weaving",
+		"[Space] Toggle Selected Spell",
+		"[↑/↓] Navigate",
+	}
+	lines = append(lines, FooterStyle.Render(lipgloss.JoinVertical(lipgloss.Left, controls...)))
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }

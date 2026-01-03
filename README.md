@@ -88,12 +88,15 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 
 Focus: Replace basic auto-cast with intelligent priority-based rotation system.
 
-- [ ] **Milestone 19: Advanced Spell Rotation System** *(v1.5.0)*
-  - Replace basic auto-cast with priority-based rotation planner
-  - Define spell priorities, conditional chains, and resource thresholds
-  - Smart conditions: "mana efficient", "during synergy", "sigil almost full"
+- [x] **Milestone 19: Advanced Spell Rotation System** *(v1.5.0)*
+  - Priority-based rotation planner (High/Medium/Low priority tiers)
+  - Advanced conditions: "mana efficient", "during synergy", "sigil almost full"
   - Cooldown weaving optimization for maximum uptime
+  - Mana reservation system (reserve % of mana pool)
+  - Optimize for idle mode (spreads casts for sustained DPS vs burst)
+  - Convert legacy auto-cast slots to rotation with one key press
   - Dramatically improves idle gameplay while rewarding optimization
+  - Full UI with rotation view ([O] key) and real-time configuration
 
 #### Future Considerations
 
@@ -227,6 +230,7 @@ DEBUG=false
 |-----|--------|
 | `S` | Open Spells view |
 | `R` | Open Rituals view |
+| `O` | Open Rotation view (v1.5.0) |
 | `T` | Open Stats view |
 | `P` | Open Prestige view (at floor 100+) |
 | `M` | Open Menu |
@@ -240,6 +244,17 @@ DEBUG=false
 | `Enter` | Select/Cast spell manually |
 | `Ctrl+S` | Manual Save |
 | `Q` | Quit (auto-saves) |
+
+### Rotation View Controls (v1.5.0)
+
+| Key | Action |
+|-----|--------|
+| `O` | Toggle rotation system on/off |
+| `V` | Convert auto-cast slots to rotation |
+| `W` | Toggle cooldown weaving |
+| `Space` | Enable/disable selected spell |
+| `↑/↓` | Navigate spell list |
+| `Esc` | Return to tower |
 
 ## 📝 License
 

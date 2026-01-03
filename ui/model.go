@@ -21,6 +21,7 @@ const (
 	ViewMenu       ViewType = "menu"
 	ViewSpecialize ViewType = "specialize"
 	ViewFloorEvent ViewType = "floor_event"
+	ViewRotation   ViewType = "rotation" // v1.5.0
 )
 
 // Model is the main Bubble Tea model for the game.

@@ -18,9 +18,9 @@ type GameEngine struct {
 	OnSpellUpgraded    func(spell *models.Spell)
 
 	// v1.4.0: Synergy caching
-	cachedSynergies      []models.RitualSynergy
-	synergyGeneration    int
-	lastRitualStateHash  string
+	cachedSynergies     []models.RitualSynergy
+	synergyGeneration   int
+	lastRitualStateHash string
 }
 
 // NewGameEngine creates a new game engine instance.
