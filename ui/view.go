@@ -835,7 +835,7 @@ func (m Model) viewRotation() string {
 
 	// Header
 	header := HeaderStyle.Width(80).Render(
-		TitleStyle.Render(sym.Bullet+" ADVANCED SPELL ROTATION"),
+		TitleStyle.Render(sym.Bullet + " ADVANCED SPELL ROTATION"),
 	)
 	lines = append(lines, header)
 	lines = append(lines, "")

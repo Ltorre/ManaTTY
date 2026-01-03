@@ -82,12 +82,7 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
   - Rewards strategic ritual composition planning
   - Performance optimized with synergy caching
 
-### Future Roadmap
-
 #### v1.5.0 — Advanced Spell Rotation
-
-Focus: Replace basic auto-cast with intelligent priority-based rotation system.
-
 - [x] **Milestone 19: Advanced Spell Rotation System** *(v1.5.0)*
   - Priority-based rotation planner (High/Medium/Low priority tiers)
   - Advanced conditions: "mana efficient", "during synergy", "sigil almost full"
@@ -97,6 +92,8 @@ Focus: Replace basic auto-cast with intelligent priority-based rotation system.
   - Convert legacy auto-cast slots to rotation with one key press
   - Dramatically improves idle gameplay while rewarding optimization
   - Full UI with rotation view ([O] key) and real-time configuration
+
+### Future Roadmap
 
 #### Future Considerations
 
