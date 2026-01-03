@@ -95,6 +95,15 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 
 ### Future Roadmap
 
+#### v1.6.0 — Spell Combo System (Planned)
+
+- [ ] **Milestone 20: Spell Combo System** *(v1.6.0)*
+  - Casting specific spell sequences triggers combo bonuses
+  - Examples: Fire→Fire→Ice = "Steam Burst" (+30% dmg), Ice→Thunder→Thunder = "Superconductor" (-50% cost)
+  - 10-15 discoverable combos with visual feedback
+  - Rewards thoughtful spell rotation planning
+  - Works with auto-cast rotation system
+
 #### Future Considerations
 
 - [ ] **Spell Evolution & Mastery System**
@@ -110,13 +119,7 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
   - Examples: "Mana Capacitor" (+50% max mana, -20% regen), "Temporal Loop" (every 10th spell triggers twice)
   - Forces meaningful equipment choices and build specialization
 
-- [ ] **Spell Combo System**
-  - Casting specific spell sequences triggers combo bonuses
-  - Examples: Fire→Fire→Ice = "Steam Burst" (+30% dmg), Ice→Thunder→Thunder = "Superconductor" (-50% cost)
-  - 10-15 discoverable combos with visual feedback
-  - Rewards thoughtful spell rotation planning
-  - Works with auto-cast rotation system
-
+ 
 - [ ] **Mana Overflow Mechanics** - Convert excess mana generation into sigil charge, cooldown reduction, or burst damage
 - [ ] **Ritual Maturation** - Rituals gain +1% effectiveness per hour active (caps at +50% after 50 hours)
 - [ ] **Floor Event Memory** - Unlock permanent bonuses for consistently choosing same event type
