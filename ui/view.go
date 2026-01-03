@@ -525,15 +525,16 @@ func (m Model) viewRituals() string {
 	}
 	lines = append(lines, "")
 
-	// Total ritual bonuses summary (v1.2.0)
+	// Total ritual bonuses summary (v1.2.0, v1.4.0 with synergies)
 	if len(m.gameState.GetActiveRituals()) > 0 && m.engine != nil {
 		lines = append(lines, DimStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
 		lines = append(lines, SubtitleStyle.Render("Combined Bonuses"))
 
-		dmgBonus := m.engine.GetTotalRitualDamageBonus(m.gameState)
-		cdBonus := m.engine.GetTotalRitualCooldownReduction(m.gameState)
-		manaBonus := m.engine.GetTotalRitualManaCostReduction(m.gameState)
+		dmgBonus := m.engine.GetTotalRitualDamageBonusWithSynergies(m.gameState)
+		cdBonus := m.engine.GetTotalRitualCooldownReductionWithSynergies(m.gameState)
+		manaBonus := m.engine.GetTotalRitualManaCostReductionWithSynergies(m.gameState)
 		sigilBonus := m.engine.GetTotalRitualSigilChargeBonus(m.gameState)
+		manaGenBonus := m.engine.GetTotalRitualManaGenBonusWithSynergies(m.gameState)
 
 		bonusLines := []string{}
 		if dmgBonus > 0 {
@@ -545,13 +546,37 @@ func (m Model) viewRituals() string {
 		if manaBonus > 0 {
 			bonusLines = append(bonusLines, fmt.Sprintf("⚡ -%.0f%% mana cost", manaBonus*100))
 		}
+		if manaGenBonus > 0 {
+			bonusLines = append(bonusLines, fmt.Sprintf("✨ +%.0f%% mana gen", manaGenBonus*100))
+		}
 		if sigilBonus > 0 {
-			bonusLines = append(bonusLines, fmt.Sprintf("✨ +%.0f%% sigil charge", sigilBonus*100))
+			bonusLines = append(bonusLines, fmt.Sprintf("🔮 +%.0f%% sigil rate", sigilBonus*100))
 		}
 
 		if len(bonusLines) > 0 {
 			lines = append(lines, "  "+strings.Join(bonusLines, "  |  "))
 		}
+
+		// v1.4.0: Display active synergies
+		activeSynergies := m.engine.GetActiveSynergies(m.gameState)
+		if len(activeSynergies) > 0 {
+			lines = append(lines, "")
+			lines = append(lines, SubtitleStyle.Render("✨ Active Synergies"))
+			for _, synergy := range activeSynergies {
+				// Build element icons string
+				elementIcons := []string{}
+				for _, element := range synergy.Elements {
+					elementIcons = append(elementIcons, GetElementIcon(string(element)))
+				}
+				synergyLine := fmt.Sprintf("  %s %s: %s (+%.0f%% to effects)",
+					strings.Join(elementIcons, " + "),
+					synergy.Name,
+					synergy.Description,
+					synergy.Magnitude*100)
+				lines = append(lines, HighlightStyle.Render(synergyLine))
+			}
+		}
+
 		lines = append(lines, "")
 	}
 

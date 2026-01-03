@@ -83,8 +83,8 @@ func (e *GameEngine) CalculateManaPerSecond(gs *models.GameState) float64 {
 		permanentMultiplier,
 	)
 
-	// Apply ritual mana generation bonuses (v1.3.1 - hybrid combos)
-	ritualManaGenBonus := e.GetTotalRitualManaGenBonus(gs)
+	// Apply ritual mana generation bonuses (v1.3.1 - hybrid combos, v1.4.0 - synergies)
+	ritualManaGenBonus := e.GetTotalRitualManaGenBonusWithSynergies(gs)
 	if ritualManaGenBonus > 0 {
 		manaPerSec *= (1.0 + ritualManaGenBonus)
 	}
