@@ -2,7 +2,9 @@ package engine
 
 import (
 	"errors"
+	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/Ltorre/ManaTTY/game"
 	"github.com/Ltorre/ManaTTY/models"
@@ -219,9 +221,28 @@ func (e *GameEngine) GetTotalRitualManaGenBonus(gs *models.GameState) float64 {
 
 // v1.4.0: Ritual Synergy System
 
+// getRitualStateHash generates a hash of the current ritual state for cache validation.
+func getRitualStateHash(gs *models.GameState) string {
+	var parts []string
+	for _, ritual := range gs.Rituals {
+		if ritual.IsActive {
+			parts = append(parts, fmt.Sprintf("%s:%s", ritual.ID, ritual.Composition))
+		}
+	}
+	sort.Strings(parts) // Ensure deterministic ordering
+	return strings.Join(parts, "|")
+}
+
 // GetActiveSynergies detects and returns all active synergies based on ritual elements.
 // Synergies require effects to come from at least 2 different active rituals.
+// Results are cached to avoid redundant calculations per game tick.
 func (e *GameEngine) GetActiveSynergies(gs *models.GameState) []models.RitualSynergy {
+	// Check cache validity
+	currentHash := getRitualStateHash(gs)
+	if currentHash == e.lastRitualStateHash && e.synergyGeneration >= 0 {
+		return e.cachedSynergies
+	}
+
 	// Track which rituals contribute which elements
 	ritualElements := make(map[string]map[models.Element]bool)
 	for _, ritual := range gs.Rituals {
@@ -238,6 +259,9 @@ func (e *GameEngine) GetActiveSynergies(gs *models.GameState) []models.RitualSyn
 				case models.RitualEffectManaCost:
 					ritualElements[ritual.ID][models.ElementThunder] = true
 				case models.RitualEffectManaGenRate:
+					ritualElements[ritual.ID][models.ElementArcane] = true
+				case models.RitualEffectSigilRate:
+					// Legacy sigil rituals count as Arcane for synergy purposes
 					ritualElements[ritual.ID][models.ElementArcane] = true
 				}
 			}
@@ -288,6 +312,11 @@ func (e *GameEngine) GetActiveSynergies(gs *models.GameState) []models.RitualSyn
 	sort.Slice(activeSynergies, func(i, j int) bool {
 		return activeSynergies[i].Name < activeSynergies[j].Name
 	})
+
+	// Update cache
+	e.cachedSynergies = activeSynergies
+	e.lastRitualStateHash = currentHash
+	e.synergyGeneration++
 
 	return activeSynergies
 }

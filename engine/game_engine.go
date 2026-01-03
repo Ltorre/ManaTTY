@@ -16,11 +16,18 @@ type GameEngine struct {
 	OnPrestige         func(era int)
 	OnSynergyActivated func(element models.Element)
 	OnSpellUpgraded    func(spell *models.Spell)
+
+	// v1.4.0: Synergy caching
+	cachedSynergies      []models.RitualSynergy
+	synergyGeneration    int
+	lastRitualStateHash  string
 }
 
 // NewGameEngine creates a new game engine instance.
 func NewGameEngine() *GameEngine {
-	return &GameEngine{}
+	return &GameEngine{
+		synergyGeneration: -1, // Force initial calculation
+	}
 }
 
 // Tick processes a single game tick, updating all game state.

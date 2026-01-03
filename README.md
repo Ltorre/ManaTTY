@@ -74,7 +74,7 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 
 ### Future Roadmap
 
-#### v1.4.0 — Ritual Synergies (Planned)
+#### v1.4.0 — Ritual Synergies
 
 Focus: Transform rituals from independent choices into an interconnected puzzle system.
 
