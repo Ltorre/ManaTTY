@@ -67,9 +67,9 @@ func (e *GameEngine) Tick(gs *models.GameState, elapsed time.Duration) {
 	// Update ritual cooldowns
 	e.UpdateRitualCooldowns(gs, elapsedMs)
 
-	// Auto-cast spells if enabled
+	// Auto-cast spells if enabled (v1.5.0: uses rotation system if configured)
 	if gs.Session.AutoCastEnabled {
-		e.ProcessAutoCasts(gs)
+		e.ProcessRotation(gs)
 	}
 
 	// Update session data

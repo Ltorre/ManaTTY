@@ -72,12 +72,7 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
   - **Ritual redesign:** Arcane now grants mana generation (+20% pure bonus). Hybrid combos grant dual bonuses (+12% dominant + +10% secondary)
   - **Display fix:** Ritual effects now display in consistent order (no more flickering)
 
-### Future Roadmap
-
 #### v1.4.0 — Ritual Synergies
-
-Focus: Transform rituals from independent choices into an interconnected puzzle system.
-
 - [x] **Milestone 18: Ritual Synergies & Chains** *(v1.4.0)*
   - Rituals interact when certain combinations are active together
   - Example synergies: Fire+Ice = "Thermal Shock" (+15% to both), Thunder+Arcane = "Mana Conduit" (+20% efficiency)
@@ -85,6 +80,20 @@ Focus: Transform rituals from independent choices into an interconnected puzzle 
   - Transforms 3 independent ritual slots into interconnected puzzle
   - All bonuses are passive (idle-friendly)
   - Rewards strategic ritual composition planning
+  - Performance optimized with synergy caching
+
+### Future Roadmap
+
+#### v1.5.0 — Advanced Spell Rotation
+
+Focus: Replace basic auto-cast with intelligent priority-based rotation system.
+
+- [ ] **Milestone 19: Advanced Spell Rotation System** *(v1.5.0)*
+  - Replace basic auto-cast with priority-based rotation planner
+  - Define spell priorities, conditional chains, and resource thresholds
+  - Smart conditions: "mana efficient", "during synergy", "sigil almost full"
+  - Cooldown weaving optimization for maximum uptime
+  - Dramatically improves idle gameplay while rewarding optimization
 
 #### Future Considerations
 
@@ -93,13 +102,6 @@ Focus: Transform rituals from independent choices into an interconnected puzzle 
   - Permanent upgrades per spell: Fire +5% dmg, Ice -2% CD, Thunder -3% cost, Arcane +2% mana regen
   - Mastery persists through prestige, showing lifetime progress
   - Creates gradual permanent progression and rewards spell commitment
-
-- [ ] **Advanced Spell Rotation System**
-  - Replace basic auto-cast with priority-based rotation planner
-  - Define spell priorities, conditional chains, and resource thresholds
-  - Smart conditions: "mana efficient", "during synergy", "sigil almost full"
-  - Cooldown weaving optimization for maximum uptime
-  - Dramatically improves idle gameplay while rewarding optimization
 
 - [ ] **Prestige Artifact System**
   - Unlock rare artifacts at major milestones (floors 100, 250, 500, etc.)
