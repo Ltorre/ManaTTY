@@ -2,6 +2,9 @@ package engine
 
 import (
 	"errors"
+	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/Ltorre/ManaTTY/game"
 	"github.com/Ltorre/ManaTTY/models"
@@ -214,4 +217,153 @@ func (e *GameEngine) GetTotalRitualSigilChargeBonus(gs *models.GameState) float6
 // GetTotalRitualManaGenBonus returns combined mana generation bonus from all active rituals.
 func (e *GameEngine) GetTotalRitualManaGenBonus(gs *models.GameState) float64 {
 	return e.getTotalRitualEffectBonus(gs, models.RitualEffectManaGenRate)
+}
+
+// v1.4.0: Ritual Synergy System
+
+// getRitualStateHash generates a hash of the current ritual state for cache validation.
+func getRitualStateHash(gs *models.GameState) string {
+	var parts []string
+	for _, ritual := range gs.Rituals {
+		if ritual.IsActive {
+			parts = append(parts, fmt.Sprintf("%s:%s", ritual.ID, ritual.Composition))
+		}
+	}
+	sort.Strings(parts) // Ensure deterministic ordering
+	return strings.Join(parts, "|")
+}
+
+// GetActiveSynergies detects and returns all active synergies based on ritual elements.
+// Synergies require effects to come from at least 2 different active rituals.
+// Results are cached to avoid redundant calculations per game tick.
+func (e *GameEngine) GetActiveSynergies(gs *models.GameState) []models.RitualSynergy {
+	// Check cache validity
+	currentHash := getRitualStateHash(gs)
+	if currentHash == e.lastRitualStateHash && e.synergyGeneration >= 0 {
+		return e.cachedSynergies
+	}
+
+	// Track which rituals contribute which elements
+	ritualElements := make(map[string]map[models.Element]bool)
+	for _, ritual := range gs.Rituals {
+		if ritual.IsActive {
+			ritualElements[ritual.ID] = make(map[models.Element]bool)
+			effects := getRitualEffects(ritual)
+			for _, effect := range effects {
+				// Map effect type back to element
+				switch effect.Type {
+				case models.RitualEffectDamage:
+					ritualElements[ritual.ID][models.ElementFire] = true
+				case models.RitualEffectCooldown:
+					ritualElements[ritual.ID][models.ElementIce] = true
+				case models.RitualEffectManaCost:
+					ritualElements[ritual.ID][models.ElementThunder] = true
+				case models.RitualEffectManaGenRate:
+					ritualElements[ritual.ID][models.ElementArcane] = true
+				case models.RitualEffectSigilRate:
+					// Legacy sigil rituals count as Arcane for synergy purposes
+					ritualElements[ritual.ID][models.ElementArcane] = true
+				}
+			}
+		}
+	}
+
+	// Check each synergy definition
+	activeSynergies := []models.RitualSynergy{}
+	for _, synergy := range models.SynergyDefinitions {
+		// Count how many distinct rituals provide the required elements
+		ritualMatchCount := 0
+		for _, ritualElems := range ritualElements {
+			hasAnyRequired := false
+			for _, element := range synergy.Elements {
+				if ritualElems[element] {
+					hasAnyRequired = true
+					break
+				}
+			}
+			if hasAnyRequired {
+				ritualMatchCount++
+			}
+		}
+
+		// Verify all required elements are present across rituals
+		allElementsPresent := true
+		for _, element := range synergy.Elements {
+			found := false
+			for _, ritualElems := range ritualElements {
+				if ritualElems[element] {
+					found = true
+					break
+				}
+			}
+			if !found {
+				allElementsPresent = false
+				break
+			}
+		}
+
+		// Synergy requires at least 2 rituals and all elements present
+		if ritualMatchCount >= 2 && allElementsPresent {
+			activeSynergies = append(activeSynergies, synergy)
+		}
+	}
+
+	// Sort synergies by name for consistent display order
+	sort.Slice(activeSynergies, func(i, j int) bool {
+		return activeSynergies[i].Name < activeSynergies[j].Name
+	})
+
+	// Update cache
+	e.cachedSynergies = activeSynergies
+	e.lastRitualStateHash = currentHash
+	e.synergyGeneration++
+
+	return activeSynergies
+}
+
+// GetSynergyBonusForElement returns the total synergy bonus multiplier for a specific element.
+// This stacks multiplicatively with ritual effects.
+func (e *GameEngine) GetSynergyBonusForElement(gs *models.GameState, element models.Element) float64 {
+	activeSynergies := e.GetActiveSynergies(gs)
+	totalBonus := 0.0
+
+	for _, synergy := range activeSynergies {
+		// Check if this synergy applies to the element
+		for _, synergyElement := range synergy.Elements {
+			if synergyElement == element {
+				totalBonus += synergy.Magnitude
+				break
+			}
+		}
+	}
+
+	return totalBonus
+}
+
+// GetTotalRitualDamageBonusWithSynergies returns damage bonus with synergy multipliers applied.
+func (e *GameEngine) GetTotalRitualDamageBonusWithSynergies(gs *models.GameState) float64 {
+	baseBonus := e.GetTotalRitualDamageBonus(gs)
+	synergyBonus := e.GetSynergyBonusForElement(gs, models.ElementFire)
+	return baseBonus * (1.0 + synergyBonus)
+}
+
+// GetTotalRitualCooldownReductionWithSynergies returns cooldown reduction with synergy multipliers applied.
+func (e *GameEngine) GetTotalRitualCooldownReductionWithSynergies(gs *models.GameState) float64 {
+	baseBonus := e.GetTotalRitualCooldownReduction(gs)
+	synergyBonus := e.GetSynergyBonusForElement(gs, models.ElementIce)
+	return baseBonus * (1.0 + synergyBonus)
+}
+
+// GetTotalRitualManaCostReductionWithSynergies returns mana cost reduction with synergy multipliers applied.
+func (e *GameEngine) GetTotalRitualManaCostReductionWithSynergies(gs *models.GameState) float64 {
+	baseBonus := e.GetTotalRitualManaCostReduction(gs)
+	synergyBonus := e.GetSynergyBonusForElement(gs, models.ElementThunder)
+	return baseBonus * (1.0 + synergyBonus)
+}
+
+// GetTotalRitualManaGenBonusWithSynergies returns mana generation bonus with synergy multipliers applied.
+func (e *GameEngine) GetTotalRitualManaGenBonusWithSynergies(gs *models.GameState) float64 {
+	baseBonus := e.GetTotalRitualManaGenBonus(gs)
+	synergyBonus := e.GetSynergyBonusForElement(gs, models.ElementArcane)
+	return baseBonus * (1.0 + synergyBonus)
 }

@@ -15,6 +15,9 @@ mage-tower-ascension
 # Media files
 *.mp4
 
+# Linter configuration
+.golangci.yml
+
 # Dependency directories
 vendor/
 

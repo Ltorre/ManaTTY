@@ -16,11 +16,18 @@ type GameEngine struct {
 	OnPrestige         func(era int)
 	OnSynergyActivated func(element models.Element)
 	OnSpellUpgraded    func(spell *models.Spell)
+
+	// v1.4.0: Synergy caching
+	cachedSynergies      []models.RitualSynergy
+	synergyGeneration    int
+	lastRitualStateHash  string
 }
 
 // NewGameEngine creates a new game engine instance.
 func NewGameEngine() *GameEngine {
-	return &GameEngine{}
+	return &GameEngine{
+		synergyGeneration: -1, // Force initial calculation
+	}
 }
 
 // Tick processes a single game tick, updating all game state.
@@ -83,8 +90,8 @@ func (e *GameEngine) CalculateManaPerSecond(gs *models.GameState) float64 {
 		permanentMultiplier,
 	)
 
-	// Apply ritual mana generation bonuses (v1.3.1 - hybrid combos)
-	ritualManaGenBonus := e.GetTotalRitualManaGenBonus(gs)
+	// Apply ritual mana generation bonuses (v1.3.1 - hybrid combos, v1.4.0 - synergies)
+	ritualManaGenBonus := e.GetTotalRitualManaGenBonusWithSynergies(gs)
 	if ritualManaGenBonus > 0 {
 		manaPerSec *= (1.0 + ritualManaGenBonus)
 	}

@@ -52,8 +52,8 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		manaCost *= (1.0 - game.ResonanceThunderManaCostReduction)
 	}
 
-	// v1.2.0: Ritual combo effect - Thunder (mana cost reduction)
-	ritualManaCostReduction := e.GetTotalRitualManaCostReduction(gs)
+	// v1.2.0/v1.4.0: Ritual combo effect + synergies - Thunder (mana cost reduction)
+	ritualManaCostReduction := e.GetTotalRitualManaCostReductionWithSynergies(gs)
 	if ritualManaCostReduction > 0 {
 		manaCost *= (1.0 - ritualManaCostReduction)
 	}
@@ -91,8 +91,8 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		cooldownReduction += game.ResonanceIceCooldownReduction
 	}
 
-	// v1.2.0: Ritual combo effect - Ice (cooldown reduction)
-	cooldownReduction += e.GetTotalRitualCooldownReduction(gs)
+	// v1.2.0/v1.4.0: Ritual combo effect + synergies - Ice (cooldown reduction)
+	cooldownReduction += e.GetTotalRitualCooldownReductionWithSynergies(gs)
 
 	// Apply synergy bonus to cooldown if active
 	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
@@ -120,8 +120,8 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		damage *= (1.0 + game.ResonanceFireDamageBonus)
 	}
 
-	// v1.2.0: Ritual combo effect - Fire (damage bonus)
-	ritualDamageBonus := e.GetTotalRitualDamageBonus(gs)
+	// v1.2.0/v1.4.0: Ritual combo effect + synergies - Fire (damage bonus)
+	ritualDamageBonus := e.GetTotalRitualDamageBonusWithSynergies(gs)
 	if ritualDamageBonus > 0 {
 		damage *= (1.0 + ritualDamageBonus)
 	}
