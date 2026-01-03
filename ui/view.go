@@ -533,7 +533,6 @@ func (m Model) viewRituals() string {
 		dmgBonus := m.engine.GetTotalRitualDamageBonusWithSynergies(m.gameState)
 		cdBonus := m.engine.GetTotalRitualCooldownReductionWithSynergies(m.gameState)
 		manaBonus := m.engine.GetTotalRitualManaCostReductionWithSynergies(m.gameState)
-		sigilBonus := m.engine.GetTotalRitualSigilChargeBonus(m.gameState)
 		manaGenBonus := m.engine.GetTotalRitualManaGenBonusWithSynergies(m.gameState)
 
 		bonusLines := []string{}
@@ -548,9 +547,6 @@ func (m Model) viewRituals() string {
 		}
 		if manaGenBonus > 0 {
 			bonusLines = append(bonusLines, fmt.Sprintf("✨ +%.0f%% mana gen", manaGenBonus*100))
-		}
-		if sigilBonus > 0 {
-			bonusLines = append(bonusLines, fmt.Sprintf("🔮 +%.0f%% sigil rate", sigilBonus*100))
 		}
 
 		if len(bonusLines) > 0 {

@@ -2,6 +2,7 @@ package engine
 
 import (
 	"errors"
+	"sort"
 
 	"github.com/Ltorre/ManaTTY/game"
 	"github.com/Ltorre/ManaTTY/models"
@@ -219,23 +220,25 @@ func (e *GameEngine) GetTotalRitualManaGenBonus(gs *models.GameState) float64 {
 // v1.4.0: Ritual Synergy System
 
 // GetActiveSynergies detects and returns all active synergies based on ritual elements.
+// Synergies require effects to come from at least 2 different active rituals.
 func (e *GameEngine) GetActiveSynergies(gs *models.GameState) []models.RitualSynergy {
-	// Count elements from all active rituals
-	elementCounts := make(map[models.Element]int)
+	// Track which rituals contribute which elements
+	ritualElements := make(map[string]map[models.Element]bool)
 	for _, ritual := range gs.Rituals {
 		if ritual.IsActive {
+			ritualElements[ritual.ID] = make(map[models.Element]bool)
 			effects := getRitualEffects(ritual)
 			for _, effect := range effects {
 				// Map effect type back to element
 				switch effect.Type {
 				case models.RitualEffectDamage:
-					elementCounts[models.ElementFire]++
+					ritualElements[ritual.ID][models.ElementFire] = true
 				case models.RitualEffectCooldown:
-					elementCounts[models.ElementIce]++
+					ritualElements[ritual.ID][models.ElementIce] = true
 				case models.RitualEffectManaCost:
-					elementCounts[models.ElementThunder]++
+					ritualElements[ritual.ID][models.ElementThunder] = true
 				case models.RitualEffectManaGenRate:
-					elementCounts[models.ElementArcane]++
+					ritualElements[ritual.ID][models.ElementArcane] = true
 				}
 			}
 		}
@@ -244,18 +247,47 @@ func (e *GameEngine) GetActiveSynergies(gs *models.GameState) []models.RitualSyn
 	// Check each synergy definition
 	activeSynergies := []models.RitualSynergy{}
 	for _, synergy := range models.SynergyDefinitions {
-		// Check if all required elements are present
-		hasAllElements := true
+		// Count how many distinct rituals provide the required elements
+		ritualMatchCount := 0
+		for _, ritualElems := range ritualElements {
+			hasAnyRequired := false
+			for _, element := range synergy.Elements {
+				if ritualElems[element] {
+					hasAnyRequired = true
+					break
+				}
+			}
+			if hasAnyRequired {
+				ritualMatchCount++
+			}
+		}
+
+		// Verify all required elements are present across rituals
+		allElementsPresent := true
 		for _, element := range synergy.Elements {
-			if elementCounts[element] == 0 {
-				hasAllElements = false
+			found := false
+			for _, ritualElems := range ritualElements {
+				if ritualElems[element] {
+					found = true
+					break
+				}
+			}
+			if !found {
+				allElementsPresent = false
 				break
 			}
 		}
-		if hasAllElements {
+
+		// Synergy requires at least 2 rituals and all elements present
+		if ritualMatchCount >= 2 && allElementsPresent {
 			activeSynergies = append(activeSynergies, synergy)
 		}
 	}
+
+	// Sort synergies by name for consistent display order
+	sort.Slice(activeSynergies, func(i, j int) bool {
+		return activeSynergies[i].Name < activeSynergies[j].Name
+	})
 
 	return activeSynergies
 }

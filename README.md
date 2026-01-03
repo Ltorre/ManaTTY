@@ -78,11 +78,11 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
 
 Focus: Transform rituals from independent choices into an interconnected puzzle system.
 
-- [ ] **Milestone 18: Ritual Synergies & Chains**
+- [x] **Milestone 18: Ritual Synergies & Chains** *(v1.4.0)*
   - Rituals interact when certain combinations are active together
   - Example synergies: Fire+Ice = "Thermal Shock" (+15% to both), Thunder+Arcane = "Mana Conduit" (+20% efficiency)
-  - 8-10 discoverable synergy combinations
-  - Transforms 5 independent ritual slots into interconnected puzzle
+  - 6 synergy combinations: Thermal Shock, Mana Conduit, Volcanic Fury, Frozen Lightning, Arcane Inferno, Glacial Mystic
+  - Transforms 3 independent ritual slots into interconnected puzzle
   - All bonuses are passive (idle-friendly)
   - Rewards strategic ritual composition planning
 
