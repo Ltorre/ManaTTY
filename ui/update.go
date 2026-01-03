@@ -551,7 +551,7 @@ func (m Model) handleRotationKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.selectedIndex--
 		}
 	case "down", "j":
-		if m.selectedIndex < len(rotation.Spells)-1 {
+		if len(rotation.Spells) > 0 && m.selectedIndex < len(rotation.Spells)-1 {
 			m.selectedIndex++
 		}
 	case "o":
@@ -577,13 +577,19 @@ func (m Model) handleRotationKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.ShowNotification(fmt.Sprintf("Cooldown weaving %s", status))
 	case " ":
 		// Toggle selected spell enabled/disabled
-		if m.selectedIndex < len(rotation.Spells) {
-			m.gameState.ToggleRotationSpell(rotation.Spells[m.selectedIndex].SpellID)
-			status := "disabled"
-			if rotation.Spells[m.selectedIndex].Enabled {
-				status = "enabled"
+		if m.selectedIndex >= 0 && m.selectedIndex < len(rotation.Spells) {
+			spellID := rotation.Spells[m.selectedIndex].SpellID
+			m.gameState.ToggleRotationSpell(spellID)
+			
+			// Re-read rotation after toggling to get updated state safely
+			rotation = m.gameState.Session.Rotation
+			if m.selectedIndex < len(rotation.Spells) {
+				status := "disabled"
+				if rotation.Spells[m.selectedIndex].Enabled {
+					status = "enabled"
+				}
+				m.ShowNotification(fmt.Sprintf("Spell %s", status))
 			}
-			m.ShowNotification(fmt.Sprintf("Spell %s", status))
 		}
 	case "esc":
 		m.GoBack()

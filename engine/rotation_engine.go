@@ -112,8 +112,12 @@ func (e *GameEngine) checkRotationCondition(gs *models.GameState, spell *models.
 
 	case models.RotationConditionManaEfficient:
 		// Only cast if current mana / spell cost > 2.0 (efficient)
-		manaCost := e.calculateSpellManaCost(gs, spell)
+		manaCost := e.CalculateEffectiveSpellManaCost(gs, spell, false)
 		if manaCost <= 0 {
+			return false
+		}
+		// Check if available mana (after reserve) is positive before division
+		if availableMana <= 0 {
 			return false
 		}
 		return (availableMana / manaCost) > 2.0
@@ -130,7 +134,7 @@ func (e *GameEngine) checkRotationCondition(gs *models.GameState, spell *models.
 		}
 		return false
 
-	case models.RotationConditionSigilAlmostFul:
+	case models.RotationConditionSigilAlmostFull:
 		return gs.Tower.SigilCharge >= float64(gs.Tower.SigilRequired)*0.8
 
 	case models.RotationConditionHighPriority:
@@ -144,36 +148,4 @@ func (e *GameEngine) checkRotationCondition(gs *models.GameState, spell *models.
 	default:
 		return true
 	}
-}
-
-// calculateSpellManaCost computes the effective mana cost for a spell.
-// (Helper for mana efficiency calculations)
-func (e *GameEngine) calculateSpellManaCost(gs *models.GameState, spell *models.Spell) float64 {
-	// This duplicates logic from spell_engine.go CastSpell
-	// Consider refactoring to share this calculation
-	manaCost := spell.GetEffectiveManaCost(0.08) // Use game.SpellManaCostPerLevel = 0.08
-
-	// Apply specialization
-	if spell.HasSpecialization(models.SpecManaEfficiency) {
-		manaCost *= 0.8 // -20%
-	}
-
-	// Apply elemental resonance
-	resCounts := gs.GetAutoCastElementCounts()
-	if resCounts[spell.Element] >= 2 && spell.Element == models.ElementThunder {
-		manaCost *= 0.95 // -5% (game.ResonanceThunderManaCostReduction)
-	}
-
-	// Apply ritual bonuses
-	ritualReduction := e.GetTotalRitualManaCostReductionWithSynergies(gs)
-	if ritualReduction > 0 {
-		manaCost *= (1.0 - ritualReduction)
-	}
-
-	// Apply active synergy
-	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
-		manaCost *= 0.8 // -20%
-	}
-
-	return manaCost
 }

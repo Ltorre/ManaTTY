@@ -12,11 +12,11 @@ const (
 	RotationConditionSynergyActive RotationCondition = "synergy_active"
 
 	// v1.5.0: Advanced conditions
-	RotationConditionManaEfficient  RotationCondition = "mana_efficient"    // Only when mana/cost ratio > 2.0
-	RotationConditionDuringSynergy  RotationCondition = "during_synergy"    // Only when ritual synergy active for this element
-	RotationConditionSigilAlmostFul RotationCondition = "sigil_almost_full" // Only when sigil > 80%
-	RotationConditionHighPriority   RotationCondition = "high_priority"     // Always cast ASAP (ignore mana efficiency)
-	RotationConditionFillerOnly     RotationCondition = "filler_only"       // Only when nothing else can cast
+	RotationConditionManaEfficient   RotationCondition = "mana_efficient"    // Only when mana/cost ratio > 2.0
+	RotationConditionDuringSynergy   RotationCondition = "during_synergy"    // Only when ritual synergy active for this element
+	RotationConditionSigilAlmostFull RotationCondition = "sigil_almost_full" // Only when sigil > 80%
+	RotationConditionHighPriority    RotationCondition = "high_priority"     // Always cast ASAP (ignore mana efficiency)
+	RotationConditionFillerOnly      RotationCondition = "filler_only"       // Only when nothing else can cast
 )
 
 // RotationPriority defines spell priority tiers.
@@ -62,7 +62,7 @@ func GetConditionDescription(cond RotationCondition) string {
 		return "Only when mana-efficient (ratio > 2.0)"
 	case RotationConditionDuringSynergy:
 		return "Only during ritual synergy for element"
-	case RotationConditionSigilAlmostFul:
+	case RotationConditionSigilAlmostFull:
 		return "Only when sigil > 80%"
 	case RotationConditionHighPriority:
 		return "High priority - cast ASAP"

@@ -531,10 +531,27 @@ func (gs *GameState) ConvertAutoCastToRotation() {
 			priority = PriorityHigh // First spell gets high priority
 		}
 
+		// Map AutoCastCondition to RotationCondition with validation
+		var rotationCond RotationCondition
+		switch config.Condition {
+		case ConditionAlways:
+			rotationCond = RotationConditionAlways
+		case ConditionManaAbove50:
+			rotationCond = RotationConditionManaAbove50
+		case ConditionManaAbove75:
+			rotationCond = RotationConditionManaAbove75
+		case ConditionSigilNotFull:
+			rotationCond = RotationConditionSigilNotFull
+		case ConditionSynergyActive:
+			rotationCond = RotationConditionSynergyActive
+		default:
+			rotationCond = RotationConditionAlways // Safe fallback
+		}
+
 		rotationConfig := RotationSpellConfig{
 			SpellID:   config.SpellID,
 			Priority:  priority,
-			Condition: RotationCondition(config.Condition), // Direct conversion (compatible strings)
+			Condition: rotationCond,
 			Enabled:   true,
 		}
 		gs.Session.Rotation.Spells = append(gs.Session.Rotation.Spells, rotationConfig)

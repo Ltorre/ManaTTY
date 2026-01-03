@@ -18,6 +18,44 @@ var (
 	ErrNeedsSpecialization = errors.New("spell needs specialization choice")
 )
 
+// CalculateEffectiveSpellManaCost computes the complete mana cost for a spell including all bonuses.
+// This is shared between CastSpell and rotation system to avoid duplication.
+func (e *GameEngine) CalculateEffectiveSpellManaCost(gs *models.GameState, spell *models.Spell, manual bool) float64 {
+	// Base cost with level reduction
+	manaCost := game.CalculateSpellEffectiveManaCost(spell.BaseManaRequirement, spell.Level)
+	
+	if manual {
+		manaCost = game.CalculateManualCastCost(manaCost)
+	}
+
+	// Apply Mana Efficiency specialization (-20% mana cost)
+	if spell.HasSpecialization(models.SpecManaEfficiency) {
+		manaCost *= (1.0 - game.SpecManaEfficiencyBonus)
+	}
+
+	// Check elemental resonance
+	resCounts := gs.GetAutoCastElementCounts()
+	hasResonance := resCounts[spell.Element] >= game.ElementalResonanceMinSpells
+
+	// Thunder resonance: small mana-cost reduction for Thunder spells
+	if hasResonance && spell.Element == models.ElementThunder {
+		manaCost *= (1.0 - game.ResonanceThunderManaCostReduction)
+	}
+
+	// v1.2.0/v1.4.0: Ritual combo effect + synergies - Thunder (mana cost reduction)
+	ritualManaCostReduction := e.GetTotalRitualManaCostReductionWithSynergies(gs)
+	if ritualManaCostReduction > 0 {
+		manaCost *= (1.0 - ritualManaCostReduction)
+	}
+
+	// Apply synergy bonus if active and matching element
+	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
+		manaCost *= (1.0 - game.ElementSynergyBonus) // 20% cheaper
+	}
+
+	return manaCost
+}
+
 // CastSpell attempts to cast a spell.
 // Both manual and auto-cast now require mana. Manual costs +10% more.
 func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual bool) error {
@@ -36,32 +74,8 @@ func (e *GameEngine) CastSpell(gs *models.GameState, spell *models.Spell, manual
 		return ErrSpellOnCooldown
 	}
 
-	// Calculate effective mana cost (with level bonuses)
-	manaCost := game.CalculateSpellEffectiveManaCost(spell.BaseManaRequirement, spell.Level)
-	if manual {
-		manaCost = game.CalculateManualCastCost(manaCost)
-	}
-
-	// Apply Mana Efficiency specialization (-20% mana cost)
-	if spell.HasSpecialization(models.SpecManaEfficiency) {
-		manaCost *= (1.0 - game.SpecManaEfficiencyBonus)
-	}
-
-	// Thunder resonance: small mana-cost reduction for Thunder spells
-	if hasResonance && spell.Element == models.ElementThunder {
-		manaCost *= (1.0 - game.ResonanceThunderManaCostReduction)
-	}
-
-	// v1.2.0/v1.4.0: Ritual combo effect + synergies - Thunder (mana cost reduction)
-	ritualManaCostReduction := e.GetTotalRitualManaCostReductionWithSynergies(gs)
-	if ritualManaCostReduction > 0 {
-		manaCost *= (1.0 - ritualManaCostReduction)
-	}
-
-	// Apply synergy bonus if active and matching element
-	if gs.HasActiveSynergy() && gs.GetActiveSynergy() == spell.Element {
-		manaCost *= (1.0 - game.ElementSynergyBonus) // 20% cheaper
-	}
+	// Calculate effective mana cost using shared helper
+	manaCost := e.CalculateEffectiveSpellManaCost(gs, spell, manual)
 
 	// Check mana - both auto and manual require mana now
 	if gs.Tower.CurrentMana < manaCost {
