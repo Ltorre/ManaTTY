@@ -72,12 +72,7 @@ You are a wizard climbing a magical tower! Cast spells to deal damage and earn m
   - **Ritual redesign:** Arcane now grants mana generation (+20% pure bonus). Hybrid combos grant dual bonuses (+12% dominant + +10% secondary)
   - **Display fix:** Ritual effects now display in consistent order (no more flickering)
 
-### Future Roadmap
-
 #### v1.4.0 — Ritual Synergies
-
-Focus: Transform rituals from independent choices into an interconnected puzzle system.
-
 - [x] **Milestone 18: Ritual Synergies & Chains** *(v1.4.0)*
   - Rituals interact when certain combinations are active together
   - Example synergies: Fire+Ice = "Thermal Shock" (+15% to both), Thunder+Arcane = "Mana Conduit" (+20% efficiency)
@@ -85,6 +80,29 @@ Focus: Transform rituals from independent choices into an interconnected puzzle 
   - Transforms 3 independent ritual slots into interconnected puzzle
   - All bonuses are passive (idle-friendly)
   - Rewards strategic ritual composition planning
+  - Performance optimized with synergy caching
+
+#### v1.5.0 — Advanced Spell Rotation
+- [x] **Milestone 19: Advanced Spell Rotation System** *(v1.5.0)*
+  - Priority-based rotation planner (High/Medium/Low priority tiers)
+  - Advanced conditions: "mana efficient", "during synergy", "sigil almost full"
+  - Cooldown weaving optimization for maximum uptime
+  - Mana reservation system (reserve % of mana pool)
+  - Optimize for idle mode (spreads casts for sustained DPS vs burst)
+  - Convert legacy auto-cast slots to rotation with one key press
+  - Dramatically improves idle gameplay while rewarding optimization
+  - Full UI with rotation view ([O] key) and real-time configuration
+
+### Future Roadmap
+
+#### v1.6.0 — Spell Combo System (Planned)
+
+- [ ] **Milestone 20: Spell Combo System** *(v1.6.0)*
+  - Casting specific spell sequences triggers combo bonuses
+  - Examples: Fire→Fire→Ice = "Steam Burst" (+30% dmg), Ice→Thunder→Thunder = "Superconductor" (-50% cost)
+  - 10-15 discoverable combos with visual feedback
+  - Rewards thoughtful spell rotation planning
+  - Works with auto-cast rotation system
 
 #### Future Considerations
 
@@ -94,13 +112,6 @@ Focus: Transform rituals from independent choices into an interconnected puzzle 
   - Mastery persists through prestige, showing lifetime progress
   - Creates gradual permanent progression and rewards spell commitment
 
-- [ ] **Advanced Spell Rotation System**
-  - Replace basic auto-cast with priority-based rotation planner
-  - Define spell priorities, conditional chains, and resource thresholds
-  - Smart conditions: "mana efficient", "during synergy", "sigil almost full"
-  - Cooldown weaving optimization for maximum uptime
-  - Dramatically improves idle gameplay while rewarding optimization
-
 - [ ] **Prestige Artifact System**
   - Unlock rare artifacts at major milestones (floors 100, 250, 500, etc.)
   - Limited equipment slots (3-5 artifacts max)
@@ -108,13 +119,7 @@ Focus: Transform rituals from independent choices into an interconnected puzzle 
   - Examples: "Mana Capacitor" (+50% max mana, -20% regen), "Temporal Loop" (every 10th spell triggers twice)
   - Forces meaningful equipment choices and build specialization
 
-- [ ] **Spell Combo System**
-  - Casting specific spell sequences triggers combo bonuses
-  - Examples: Fire→Fire→Ice = "Steam Burst" (+30% dmg), Ice→Thunder→Thunder = "Superconductor" (-50% cost)
-  - 10-15 discoverable combos with visual feedback
-  - Rewards thoughtful spell rotation planning
-  - Works with auto-cast rotation system
-
+ 
 - [ ] **Mana Overflow Mechanics** - Convert excess mana generation into sigil charge, cooldown reduction, or burst damage
 - [ ] **Ritual Maturation** - Rituals gain +1% effectiveness per hour active (caps at +50% after 50 hours)
 - [ ] **Floor Event Memory** - Unlock permanent bonuses for consistently choosing same event type
@@ -225,6 +230,7 @@ DEBUG=false
 |-----|--------|
 | `S` | Open Spells view |
 | `R` | Open Rituals view |
+| `O` | Open Rotation view (v1.5.0) |
 | `T` | Open Stats view |
 | `P` | Open Prestige view (at floor 100+) |
 | `M` | Open Menu |
@@ -238,6 +244,17 @@ DEBUG=false
 | `Enter` | Select/Cast spell manually |
 | `Ctrl+S` | Manual Save |
 | `Q` | Quit (auto-saves) |
+
+### Rotation View Controls (v1.5.0)
+
+| Key | Action |
+|-----|--------|
+| `O` | Toggle rotation system on/off |
+| `V` | Convert auto-cast slots to rotation |
+| `W` | Toggle cooldown weaving |
+| `Space` | Enable/disable selected spell |
+| `↑/↓` | Navigate spell list |
+| `Esc` | Return to tower |
 
 ## 📝 License
 

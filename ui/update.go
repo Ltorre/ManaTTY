@@ -99,6 +99,8 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleSpecializeKeys(msg)
 	case ViewFloorEvent:
 		return m.handleFloorEventKeys(msg)
+	case ViewRotation:
+		return m.handleRotationKeys(msg)
 	}
 
 	return m, nil
@@ -205,6 +207,9 @@ func (m Model) handleTowerKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.Navigate(ViewSpells)
 	case "r":
 		m.Navigate(ViewRituals)
+	case "o":
+		// v1.5.0: Navigate to rotation view
+		m.Navigate(ViewRotation)
 	case "t":
 		m.Navigate(ViewStats)
 	case "p":
@@ -528,6 +533,69 @@ func (m Model) handleTick(msg TickMsg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, m.tickCmd()
+}
+
+// v1.5.0: Rotation View Key Handler
+func (m Model) handleRotationKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.gameState == nil {
+		m.GoBack()
+		return m, nil
+	}
+
+	m.gameState.EnsureRotation()
+	rotation := m.gameState.Session.Rotation
+
+	switch msg.String() {
+	case "up", "k":
+		if m.selectedIndex > 0 {
+			m.selectedIndex--
+		}
+	case "down", "j":
+		if len(rotation.Spells) > 0 && m.selectedIndex < len(rotation.Spells)-1 {
+			m.selectedIndex++
+		}
+	case "o":
+		// Toggle rotation on/off
+		rotation.Enabled = !rotation.Enabled
+		status := "disabled"
+		if rotation.Enabled {
+			status = "enabled"
+		}
+		m.ShowNotification(fmt.Sprintf("Rotation system %s", status))
+	case "v":
+		// Convert auto-cast to rotation
+		m.gameState.ConvertAutoCastToRotation()
+		m.selectedIndex = 0
+		m.ShowNotification("Converted auto-cast slots to rotation system")
+	case "w":
+		// Toggle cooldown weaving
+		rotation.CooldownWeaving = !rotation.CooldownWeaving
+		status := "disabled"
+		if rotation.CooldownWeaving {
+			status = "enabled"
+		}
+		m.ShowNotification(fmt.Sprintf("Cooldown weaving %s", status))
+	case " ":
+		// Toggle selected spell enabled/disabled
+		if m.selectedIndex >= 0 && m.selectedIndex < len(rotation.Spells) {
+			spellID := rotation.Spells[m.selectedIndex].SpellID
+			m.gameState.ToggleRotationSpell(spellID)
+			
+			// Re-read rotation after toggling to get updated state safely
+			rotation = m.gameState.Session.Rotation
+			if m.selectedIndex < len(rotation.Spells) {
+				status := "disabled"
+				if rotation.Spells[m.selectedIndex].Enabled {
+					status = "enabled"
+				}
+				m.ShowNotification(fmt.Sprintf("Spell %s", status))
+			}
+		}
+	case "esc":
+		m.GoBack()
+	}
+
+	return m, nil
 }
 
 // saveGameCmd returns a command to save the game.

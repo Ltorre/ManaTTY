@@ -86,6 +86,9 @@ type SessionData struct {
 	// Aggregated notifications
 	AutoCastSkipCount int `bson:"-" json:"-"` // Transient: skipped auto-casts this second
 
+	// v1.5.0: Advanced Spell Rotation
+	Rotation *SpellRotation `bson:"rotation,omitempty" json:"rotation,omitempty"`
+
 	// Floor Events (Lightweight)
 	ActiveFloorEvent    *FloorEventState `bson:"active_floor_event,omitempty" json:"active_floor_event,omitempty"`
 	ActiveFloorBuff     *FloorEventBuff  `bson:"active_floor_buff,omitempty" json:"active_floor_buff,omitempty"`
@@ -136,6 +139,7 @@ func NewSessionData() *SessionData {
 		ActiveSynergy:       "",
 		SynergyExpiresAtMs:  0,
 		AutoCastSkipCount:   0,
+		Rotation:            DefaultRotation(), // v1.5.0: Advanced rotation system
 		ActiveFloorEvent:    nil,
 		ActiveFloorBuff:     nil,
 		LastFloorEventFloor: 0,
@@ -500,4 +504,119 @@ func (gs *GameState) ResetForPrestige(baseSpells []*Spell) {
 		gs.Session.ActiveFloorBuff = nil
 		gs.Session.LastFloorEventFloor = 0
 	}
+}
+
+// v1.5.0: Rotation Management Helpers
+
+// EnsureRotation ensures the rotation system is initialized.
+func (gs *GameState) EnsureRotation() {
+	if gs.Session.Rotation == nil {
+		gs.Session.Rotation = DefaultRotation()
+	}
+}
+
+// ConvertAutoCastToRotation migrates legacy auto-cast configs to rotation system.
+func (gs *GameState) ConvertAutoCastToRotation() {
+	gs.EnsureRotation()
+
+	// If rotation already has spells, don't overwrite
+	if len(gs.Session.Rotation.Spells) > 0 {
+		return
+	}
+
+	// Convert auto-cast configs to rotation configs
+	for i, config := range gs.Session.AutoCastConfigs {
+		priority := PriorityMedium
+		if i == 0 {
+			priority = PriorityHigh // First spell gets high priority
+		}
+
+		// Map AutoCastCondition to RotationCondition with validation
+		var rotationCond RotationCondition
+		switch config.Condition {
+		case ConditionAlways:
+			rotationCond = RotationConditionAlways
+		case ConditionManaAbove50:
+			rotationCond = RotationConditionManaAbove50
+		case ConditionManaAbove75:
+			rotationCond = RotationConditionManaAbove75
+		case ConditionSigilNotFull:
+			rotationCond = RotationConditionSigilNotFull
+		case ConditionSynergyActive:
+			rotationCond = RotationConditionSynergyActive
+		default:
+			rotationCond = RotationConditionAlways // Safe fallback
+		}
+
+		rotationConfig := RotationSpellConfig{
+			SpellID:   config.SpellID,
+			Priority:  priority,
+			Condition: rotationCond,
+			Enabled:   true,
+		}
+		gs.Session.Rotation.Spells = append(gs.Session.Rotation.Spells, rotationConfig)
+	}
+}
+
+// AddSpellToRotation adds a spell to the rotation system.
+func (gs *GameState) AddSpellToRotation(spellID string, priority RotationPriority, condition RotationCondition) {
+	gs.EnsureRotation()
+
+	// Check if spell already in rotation
+	for i := range gs.Session.Rotation.Spells {
+		if gs.Session.Rotation.Spells[i].SpellID == spellID {
+			// Update existing entry
+			gs.Session.Rotation.Spells[i].Priority = priority
+			gs.Session.Rotation.Spells[i].Condition = condition
+			gs.Session.Rotation.Spells[i].Enabled = true
+			return
+		}
+	}
+
+	// Add new entry
+	gs.Session.Rotation.Spells = append(gs.Session.Rotation.Spells, RotationSpellConfig{
+		SpellID:   spellID,
+		Priority:  priority,
+		Condition: condition,
+		Enabled:   true,
+	})
+}
+
+// RemoveSpellFromRotation removes a spell from rotation.
+func (gs *GameState) RemoveSpellFromRotation(spellID string) {
+	gs.EnsureRotation()
+
+	for i, config := range gs.Session.Rotation.Spells {
+		if config.SpellID == spellID {
+			gs.Session.Rotation.Spells = append(gs.Session.Rotation.Spells[:i], gs.Session.Rotation.Spells[i+1:]...)
+			return
+		}
+	}
+}
+
+// ToggleRotationSpell toggles a spell's enabled status in rotation.
+func (gs *GameState) ToggleRotationSpell(spellID string) {
+	gs.EnsureRotation()
+
+	for i := range gs.Session.Rotation.Spells {
+		if gs.Session.Rotation.Spells[i].SpellID == spellID {
+			gs.Session.Rotation.Spells[i].Enabled = !gs.Session.Rotation.Spells[i].Enabled
+			return
+		}
+	}
+}
+
+// GetRotationConfig returns the rotation config for a spell, if it exists.
+func (gs *GameState) GetRotationConfig(spellID string) *RotationSpellConfig {
+	if gs.Session.Rotation == nil {
+		return nil
+	}
+
+	for i := range gs.Session.Rotation.Spells {
+		if gs.Session.Rotation.Spells[i].SpellID == spellID {
+			return &gs.Session.Rotation.Spells[i]
+		}
+	}
+
+	return nil
 }
