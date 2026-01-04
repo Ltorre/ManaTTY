@@ -897,6 +897,7 @@ func (m Model) viewRotation() string {
 		"[W] Toggle Cooldown Weaving",
 		"[Space] Toggle Selected Spell",
 		"[↑/↓] Navigate",
+		"[B/Esc] Back",
 	}
 	lines = append(lines, FooterStyle.Render(lipgloss.JoinVertical(lipgloss.Left, controls...)))
 

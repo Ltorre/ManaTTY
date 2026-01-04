@@ -591,7 +591,7 @@ func (m Model) handleRotationKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.ShowNotification(fmt.Sprintf("Spell %s", status))
 			}
 		}
-	case "esc":
+	case "b", "esc":
 		m.GoBack()
 	}
 
